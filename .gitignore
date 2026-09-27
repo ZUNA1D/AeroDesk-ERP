@@ -32,3 +32,8 @@ dist-ssr
 # Uploads
 backend/uploads/*
 !backend/uploads/.gitkeep
+
+# Internal docs & specs
+01_ROADMAP.md
+02_TECHNICAL_SPEC.md
+docs/
