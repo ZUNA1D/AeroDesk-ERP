@@ -1,4 +1,4 @@
-# AeroDesk ✈️
+# AeroDesk
 ### Modern Travel & Aviation Agency Management ERP
 
 ![Vercel Ready](https://img.shields.io/badge/Vercel-Ready-black?style=for-the-badge&logo=vercel)
@@ -13,39 +13,39 @@
 
 ---
 
-## 🌟 Key Features
+## Key Features
 
-### 1. 🎫 Air Ticketing & Multi-Pax Invoicing
+### 1. Air Ticketing & Multi-Pax Invoicing
 - **Multi-passenger batch invoicing**: Issue tickets for families and corporate groups in a single transaction with individual passenger names, ticket numbers, PNRs, routes, cost (buy) prices, and sell prices.
 - **Dynamic profit calculations**: Automatic real-time cost, sell, and net margin computation.
 - **Real-time balance adjustments**: Instantly increases client outstanding due and automatically draws down from the selected BSP/GDS portal wallet or consolidator credit line.
 
-### 2. 🛂 Visa Processing & Service Fees
+### 2. Visa Processing & Service Fees
 - Comprehensive visa invoice workflow with case tracking, embassy visa fees, service charges, cost price vs sell price margins, and passenger-level records.
 
-### 3. 💳 Money Receipts & Client Accounts Receivable
+### 3. Money Receipts & Client Accounts Receivable
 - Collect payments across multiple payment channels: **Cash, Bank Transfer (NPSB / BEFTN / RTGS), Cheques, Cards / POS, Mobile Banking (bKash / Nagad / Rocket)**.
 - **Printable Money Receipts**: Standardized vouchers with words conversion (`Taka Ten Thousand Only` / Lakh / Crore formatting).
 - Automatic reduction of client outstanding receivables with real-time running balance recalculation.
 
-### 4. 🏢 Suppliers: BSP Portals & Consolidators
+### 4. Suppliers: BSP Portals & Consolidators
 - **Prepaid Portal Wallets**: Track real-time balances of top-up accounts (e.g., Sabre, Amadeus, Galileo, Flyhub, ShareTrip).
 - **Consolidator Agency Credit Lines**: Track payable dues and credit limits for credit-line consolidators.
 - **In-House / Direct Inventory Stock**: Support for airline direct-allocated inventory with zero liability accounting.
 - **ADM & ACM Tracking**: Agency Debit Memos and Agency Credit Memos for airline penalty and rebate adjustments.
 
-### 5. 📖 Immutable General Ledger
+### 5. Immutable General Ledger
 - Complete financial record of every transaction: Invoices, Receipts, Top-ups, Payments, Expenses, and Memos.
 - **Voiding with Audit History**: Safely void erroneous transactions with mandatory audit reasons and automatic ledger reversals.
 - **Export to CSV**: One-click download of all filtered records.
 
-### 6. 📊 Analytics, Financial Statements & Aging Buckets
+### 6. Analytics, Financial Statements & Aging Buckets
 - **Printable Client Statements**: Detailed period-based statement with opening due, billed transactions, payments received, and closing due.
 - **Printable Supplier Statements**: Running balance statement for ticket suppliers.
 - **Margin Analytics**: Ticket & Visa profit margins by date range with per-transaction breakdowns.
 - **Aging Receivables**: Outstanding client balances organized into 0-30, 31-60, 61-90, and 90+ days overdue buckets.
 
-### 7. 🛡️ Security, RBAC & Self-Healing Maintenance
+### 7. Security, RBAC & Self-Healing Maintenance
 - **Role-Based Access Control**: `ADMIN`, `MANAGER`, and `STAFF` roles with granular route protections.
 - **Compliance Audit Trail**: Immutable logging of all creation, modification, void, and deletion events.
 - **Self-Healing Balances**: One-click recalculation tool that audits the raw transaction ledger and repairs any out-of-sync client dues or supplier balances.
@@ -53,7 +53,7 @@
 
 ---
 
-## 🏗️ Architecture & Double-Entry Ledger
+## Architecture & Double-Entry Ledger
 
 ```mermaid
 flowchart TD
@@ -90,7 +90,7 @@ Every financial movement executes inside an atomic MongoDB transaction session:
 
 ---
 
-## 💻 Tech Stack
+## Tech Stack
 
 | Domain | Technology | Description |
 |---|---|---|
@@ -107,7 +107,7 @@ Every financial movement executes inside an atomic MongoDB transaction session:
 
 ---
 
-## 🚀 Quick Start (Local Development)
+## Quick Start (Local Development)
 
 ### 1. Clone the repository
 ```bash
@@ -178,7 +178,7 @@ When connected to a brand new, empty database, you have two options to initializ
 
 ---
 
-## ☁️ Deployment Guide (Vercel)
+## Deployment Guide (Vercel)
 
 AeroDesk is pre-configured with `vercel.json` and `api/index.js` for fast and seamless deployment.
 
@@ -229,7 +229,7 @@ If you prefer hosting the Express backend as a long-running service:
 
 ---
 
-## 📁 Repository Structure
+## Repository Structure
 
 ```text
 aerodesk/
@@ -272,6 +272,6 @@ aerodesk/
 
 ---
 
-## 📄 License
+## License
 
 This project is licensed under the **MIT License**. Free for personal and commercial travel agency operations.
