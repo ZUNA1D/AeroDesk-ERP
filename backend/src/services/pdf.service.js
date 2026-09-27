@@ -220,6 +220,14 @@ export async function renderMoneyReceiptHtml(receipt, client) {
       </tr>
     </table>
   </div>
+
+  <script>
+    window.addEventListener('load', function() {
+      setTimeout(function() {
+        window.print();
+      }, 350);
+    });
+  </script>
 </body>
 </html>
 `;
@@ -338,6 +346,14 @@ export async function renderStatementHtml({ title, partyName, partyDetails, peri
       </tbody>
     </table>
   </div>
+
+  <script>
+    window.addEventListener('load', function() {
+      setTimeout(function() {
+        window.print();
+      }, 350);
+    });
+  </script>
 </body>
 </html>
   `;

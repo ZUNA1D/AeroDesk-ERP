@@ -9,6 +9,7 @@ import { Button } from '../components/ui/Button.jsx';
 import { QuickAddClientModal } from '../components/forms/QuickAddInline.jsx';
 import { formatMoney } from '../utils/formatMoney.js';
 import { numberToWords } from '../utils/numberToWords.js';
+import { openPrintDocument } from '../utils/print.js';
 import { Receipt, Plus, CheckCircle, Printer, AlertTriangle } from 'lucide-react';
 
 export function ReceiptsPage() {
@@ -62,8 +63,8 @@ export function ReceiptsPage() {
   };
 
   const handlePrintVoucher = (txId) => {
-    const url = `${import.meta.env.VITE_API_BASE_URL}/transactions/${txId}/receipt-pdf`;
-    window.open(url, '_blank');
+    if (!txId) return;
+    openPrintDocument(`/transactions/${txId}/receipt-pdf`);
   };
 
   return (

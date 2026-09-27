@@ -2,6 +2,7 @@ import React from 'react';
 import { useAuth } from '../../hooks/useAuth.js';
 import { useTheme } from '../../context/ThemeContext.jsx';
 import { useSidebar } from '../../context/SidebarContext.jsx';
+import { getAssetUrl } from '../../api/client.js';
 import { Menu, LogOut, Moon, Sun, ChevronDown } from 'lucide-react';
 
 export function Header() {
@@ -36,7 +37,7 @@ export function Header() {
           <div className="flex items-center gap-2.5">
             {logoUrl ? (
               <img
-                src={logoUrl.startsWith('http') ? logoUrl : `${import.meta.env.VITE_API_BASE_URL.replace('/api', '')}${logoUrl}`}
+                src={getAssetUrl(logoUrl)}
                 alt="Logo"
                 className="h-8 w-auto object-contain max-w-[120px]"
               />

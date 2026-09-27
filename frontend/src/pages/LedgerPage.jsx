@@ -11,6 +11,7 @@ import { Modal } from '../components/ui/Modal.jsx';
 import { ConfirmDialog } from '../components/ui/ConfirmDialog.jsx';
 import { InputField } from '../components/ui/InputField.jsx';
 import { formatMoney } from '../utils/formatMoney.js';
+import { openPrintDocument } from '../utils/print.js';
 import {
   BookOpen,
   Search,
@@ -115,8 +116,8 @@ export function LedgerPage() {
   };
 
   const handlePrintReceipt = (id) => {
-    const url = `${import.meta.env.VITE_API_BASE_URL}/transactions/${id}/receipt-pdf`;
-    window.open(url, '_blank');
+    if (!id) return;
+    openPrintDocument(`/transactions/${id}/receipt-pdf`);
   };
 
   const handleExportCsv = () => {

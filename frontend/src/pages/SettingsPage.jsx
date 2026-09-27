@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { settingsApi } from '../api/settings.api.js';
+import { getAssetUrl } from '../api/client.js';
 import { maintenanceApi } from '../api/maintenance.api.js';
 import { useAuth } from '../hooks/useAuth.js';
 import { Card } from '../components/ui/Card.jsx';
@@ -35,7 +36,7 @@ export function SettingsPage() {
     if (settingsData?.settings) {
       const s = settingsData.settings;
       setForm({ companyName: s.companyName || '', tagline: s.tagline || '', address: s.address || '', phone: s.phone || '', email: s.email || '', website: s.website || '', currency: s.currency || 'BDT' });
-      if (s.logoUrl) setLogoPreview(s.logoUrl.startsWith('http') ? s.logoUrl : `${import.meta.env.VITE_API_BASE_URL.replace('/api', '')}${s.logoUrl}`);
+      if (s.logoUrl) setLogoPreview(getAssetUrl(s.logoUrl));
     }
   }, [settingsData]);
 

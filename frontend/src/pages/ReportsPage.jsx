@@ -7,6 +7,7 @@ import { Card } from '../components/ui/Card.jsx';
 import { Button } from '../components/ui/Button.jsx';
 import { Badge } from '../components/ui/Badge.jsx';
 import { formatMoney } from '../utils/formatMoney.js';
+import { openPrintDocument } from '../utils/print.js';
 import {
   FileSpreadsheet,
   Printer,
@@ -100,14 +101,12 @@ export function ReportsPage() {
 
   const handlePrintClientStatement = () => {
     if (!selectedClientId) return;
-    const url = `${import.meta.env.VITE_API_BASE_URL}/reports/client-statement?clientId=${selectedClientId}&from=${dateRange.from}&to=${dateRange.to}&format=html`;
-    window.open(url, '_blank');
+    openPrintDocument(`/reports/client-statement?clientId=${selectedClientId}&from=${dateRange.from}&to=${dateRange.to}&format=html`);
   };
 
   const handlePrintSupplierStatement = () => {
     if (!selectedSupplierId) return;
-    const url = `${import.meta.env.VITE_API_BASE_URL}/reports/supplier-statement?supplierId=${selectedSupplierId}&from=${dateRange.from}&to=${dateRange.to}&format=html`;
-    window.open(url, '_blank');
+    openPrintDocument(`/reports/supplier-statement?supplierId=${selectedSupplierId}&from=${dateRange.from}&to=${dateRange.to}&format=html`);
   };
 
   const tabs = [
