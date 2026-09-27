@@ -3,8 +3,12 @@ import path from 'path';
 import fs from 'fs';
 import { env } from '../config/env.js';
 
-if (!fs.existsSync(env.UPLOAD_DIR)) {
-  fs.mkdirSync(env.UPLOAD_DIR, { recursive: true });
+try {
+  if (!fs.existsSync(env.UPLOAD_DIR)) {
+    fs.mkdirSync(env.UPLOAD_DIR, { recursive: true });
+  }
+} catch (err) {
+  console.warn('[Upload] Could not create upload directory:', err.message);
 }
 
 const storage = multer.diskStorage({
