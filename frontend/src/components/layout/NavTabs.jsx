@@ -11,15 +11,20 @@ import {
   FileSpreadsheet,
   Settings,
   Users,
-  History
+  History,
+  Crown
 } from 'lucide-react';
 import { clsx } from 'clsx';
 
 export function NavTabs() {
   const { user } = useAuth();
-  const isAdmin = user?.role === 'ADMIN';
+  const isAdmin = user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN';
+  const isSuperAdmin = user?.role === 'SUPER_ADMIN';
 
   const navItems = [
+    ...(isSuperAdmin ? [
+      { to: '/agencies', label: 'Tenants & Licensing', icon: Crown }
+    ] : []),
     { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { to: '/invoice', label: 'Issue Tickets', icon: PlaneTakeoff },
     { to: '/visa', label: 'Visa Invoice', icon: Stamp },

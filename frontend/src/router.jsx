@@ -18,6 +18,7 @@ import { ReportsPage } from './pages/ReportsPage.jsx';
 import { SettingsPage } from './pages/SettingsPage.jsx';
 import { UsersPage } from './pages/UsersPage.jsx';
 import { AuditLogPage } from './pages/AuditLogPage.jsx';
+import { AgenciesPage } from './pages/AgenciesPage.jsx';
 
 function HomeRoute() {
   const { user, loading, setupRequired } = useAuth();
@@ -114,6 +115,14 @@ export const router = createBrowserRouter([
         element: (
           <ProtectedRoute allowedRoles={['ADMIN']}>
             <AuditLogPage />
+          </ProtectedRoute>
+        )
+      },
+      {
+        path: '/agencies',
+        element: (
+          <ProtectedRoute allowedRoles={['SUPER_ADMIN']}>
+            <AgenciesPage />
           </ProtectedRoute>
         )
       }

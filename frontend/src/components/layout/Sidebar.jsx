@@ -16,16 +16,24 @@ import {
   Users,
   History,
   ChevronsLeft,
-  ChevronsRight
+  ChevronsRight,
+  Crown
 } from 'lucide-react';
 
 export function Sidebar() {
   const { user } = useAuth();
   const { isCollapsed, toggle, isMobileOpen, closeMobile } = useSidebar();
   const location = useLocation();
-  const isAdmin = user?.role === 'ADMIN';
+  const isAdmin = user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN';
+  const isSuperAdmin = user?.role === 'SUPER_ADMIN';
 
   const navGroups = [
+    ...(isSuperAdmin ? [{
+      label: 'Platform Control',
+      items: [
+        { to: '/agencies', label: 'Tenants & Licensing', icon: Crown },
+      ]
+    }] : []),
     {
       label: 'Main',
       items: [

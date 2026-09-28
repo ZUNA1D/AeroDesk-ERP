@@ -1,9 +1,9 @@
-import React from 'react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth.js';
 import { useTheme } from '../../context/ThemeContext.jsx';
 import { useSidebar } from '../../context/SidebarContext.jsx';
 import { getAssetUrl } from '../../api/client.js';
-import { Menu, LogOut, Moon, Sun, ChevronDown } from 'lucide-react';
+import { Menu, LogOut, Moon, Sun, ChevronDown, Crown } from 'lucide-react';
 
 export function Header() {
   const { user, settings, logout } = useAuth();
@@ -68,6 +68,23 @@ export function Header() {
             {isDark ? <Sun className="w-[18px] h-[18px]" /> : <Moon className="w-[18px] h-[18px]" />}
           </button>
 
+          {/* Super Admin Quick Link */}
+          {user?.role === 'SUPER_ADMIN' && (
+            <Link
+              to="/agencies"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all border shadow-sm hover:scale-[1.02]"
+              style={{
+                backgroundColor: 'rgba(234, 179, 8, 0.12)',
+                borderColor: 'rgba(234, 179, 8, 0.35)',
+                color: '#eab308'
+              }}
+              title="Go to Platform Tenants & Licensing Console"
+            >
+              <Crown className="w-3.5 h-3.5" />
+              <span>Tenants Console</span>
+            </Link>
+          )}
+
           {/* User profile */}
           {user && (
             <div
@@ -76,16 +93,25 @@ export function Header() {
             >
               <div
                 className="w-7 h-7 rounded-full flex items-center justify-center text-white font-bold text-xs"
-                style={{ background: 'linear-gradient(135deg, #3b82f6, #8b5cf6)' }}
+                style={{
+                  background:
+                    user.role === 'SUPER_ADMIN'
+                      ? 'linear-gradient(135deg, #eab308, #a855f7)'
+                      : 'linear-gradient(135deg, #3b82f6, #8b5cf6)'
+                }}
               >
-                {user.name.charAt(0).toUpperCase()}
+                {user.role === 'SUPER_ADMIN' ? '👑' : user.name.charAt(0).toUpperCase()}
               </div>
               <div className="hidden md:block text-left">
                 <div className="text-xs font-semibold leading-none" style={{ color: 'var(--text-primary)' }}>
                   {user.name}
                 </div>
                 <div className="text-[10px] mt-0.5" style={{ color: 'var(--text-tertiary)' }}>
-                  {user.role}
+                  {user.role === 'SUPER_ADMIN' ? (
+                    <span className="font-bold text-[#eab308]">SUPER ADMIN</span>
+                  ) : (
+                    user.role
+                  )}
                 </div>
               </div>
             </div>
