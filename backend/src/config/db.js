@@ -3,6 +3,20 @@ import { env } from './env.js';
 
 let mongodInstance = null;
 
+async function ensureCleanIndexes() {
+  try {
+    const txCollection = mongoose.connection.collection('transactions');
+    const indexes = await txCollection.indexes();
+    const legacyRefIndex = indexes.find(i => i.name === 'ref_1');
+    if (legacyRefIndex) {
+      await txCollection.dropIndex('ref_1');
+      console.log('[DB] Dropped legacy single-field unique index ref_1 on transactions');
+    }
+  } catch (_) {
+    // collection might not exist yet on a fresh DB, safe to ignore
+  }
+}
+
 export async function connectDB() {
   if (mongoose.connection.readyState >= 1) {
     return mongoose.connection;
@@ -15,6 +29,7 @@ export async function connectDB() {
       console.log(`[DB] Connecting to MongoDB at ${uri.replace(/:([^:@]{4})[^:@]*@/, ':****@')}...`);
       const conn = await mongoose.connect(uri);
       console.log(`[DB] MongoDB Connected: ${conn.connection.host}`);
+      await ensureCleanIndexes();
       return conn;
     } catch (err) {
       console.warn(`[DB] Connection to provided MONGODB_URI failed: ${err.message}. Falling back to in-memory replica set for dev...`);
