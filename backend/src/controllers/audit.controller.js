@@ -2,9 +2,17 @@ import { AuditLog } from '../models/AuditLog.js';
 
 export async function listAuditLogs(req, res, next) {
   try {
-    const { entityType, action, userId, from, to, page = 1, limit = 50 } = req.query;
+    const { entityType, action, userId, agencyId, from, to, page = 1, limit = 50 } = req.query;
 
-    const query = { agency: req.agencyId };
+    const query = {};
+    if (req.user?.role === 'SUPER_ADMIN') {
+      if (agencyId) {
+        query.agency = agencyId;
+      }
+    } else {
+      query.agency = req.agencyId;
+    }
+
     if (entityType) query.entityType = entityType;
     if (action) query.action = action;
     if (userId) query.performedBy = userId;
@@ -26,6 +34,7 @@ export async function listAuditLogs(req, res, next) {
     const [logs, total] = await Promise.all([
       AuditLog.find(query)
         .populate('performedBy', 'name email role')
+        .populate('agency', 'name slug')
         .sort({ timestamp: -1 })
         .skip(skip)
         .limit(limitNum),

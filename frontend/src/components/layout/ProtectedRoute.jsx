@@ -3,7 +3,7 @@ import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth.js';
 import { Loader2 } from 'lucide-react';
 
-export function ProtectedRoute({ children, allowedRoles }) {
+export function ProtectedRoute({ children, allowedRoles, agencyOnly = false }) {
   const { user, loading, setupRequired } = useAuth();
   const location = useLocation();
 
@@ -29,13 +29,17 @@ export function ProtectedRoute({ children, allowedRoles }) {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
+  // Prevent SUPER_ADMIN from accessing redundant agency/tenant-only pages
+  if (agencyOnly && user.role === 'SUPER_ADMIN') {
+    return <Navigate to="/agencies" replace />;
+  }
+
+  // Restrict access by allowed roles
   if (allowedRoles && !allowedRoles.includes(user.role)) {
-    if (allowedRoles.includes('SUPER_ADMIN')) {
-      return <Navigate to="/dashboard" replace />;
+    if (user.role === 'SUPER_ADMIN') {
+      return <Navigate to="/agencies" replace />;
     }
-    if (user.role !== 'ADMIN' && user.role !== 'SUPER_ADMIN') {
-      return <Navigate to="/dashboard" replace />;
-    }
+    return <Navigate to="/dashboard" replace />;
   }
 
   return children;

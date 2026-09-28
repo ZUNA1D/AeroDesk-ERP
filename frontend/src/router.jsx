@@ -75,40 +75,72 @@ export const router = createBrowserRouter([
     children: [
       {
         path: '/dashboard',
-        element: <DashboardPage />
+        element: (
+          <ProtectedRoute agencyOnly>
+            <DashboardPage />
+          </ProtectedRoute>
+        )
       },
       {
         path: '/invoice',
-        element: <InvoicePage />
+        element: (
+          <ProtectedRoute agencyOnly>
+            <InvoicePage />
+          </ProtectedRoute>
+        )
       },
       {
         path: '/visa',
-        element: <VisaPage />
+        element: (
+          <ProtectedRoute agencyOnly>
+            <VisaPage />
+          </ProtectedRoute>
+        )
       },
       {
         path: '/receipts',
-        element: <ReceiptsPage />
+        element: (
+          <ProtectedRoute agencyOnly>
+            <ReceiptsPage />
+          </ProtectedRoute>
+        )
       },
       {
         path: '/ledger',
-        element: <LedgerPage />
+        element: (
+          <ProtectedRoute agencyOnly>
+            <LedgerPage />
+          </ProtectedRoute>
+        )
       },
       {
         path: '/suppliers',
-        element: <SuppliersPage />
+        element: (
+          <ProtectedRoute agencyOnly>
+            <SuppliersPage />
+          </ProtectedRoute>
+        )
       },
       {
         path: '/reports',
-        element: <ReportsPage />
+        element: (
+          <ProtectedRoute agencyOnly>
+            <ReportsPage />
+          </ProtectedRoute>
+        )
       },
       {
         path: '/settings',
-        element: <SettingsPage />
+        element: (
+          <ProtectedRoute agencyOnly>
+            <SettingsPage />
+          </ProtectedRoute>
+        )
       },
       {
         path: '/users',
         element: (
-          <ProtectedRoute allowedRoles={['ADMIN']}>
+          <ProtectedRoute allowedRoles={['ADMIN']} agencyOnly>
             <UsersPage />
           </ProtectedRoute>
         )
@@ -116,7 +148,7 @@ export const router = createBrowserRouter([
       {
         path: '/audit-log',
         element: (
-          <ProtectedRoute allowedRoles={['ADMIN']}>
+          <ProtectedRoute allowedRoles={['ADMIN', 'SUPER_ADMIN']}>
             <AuditLogPage />
           </ProtectedRoute>
         )

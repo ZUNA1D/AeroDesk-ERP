@@ -1,20 +1,34 @@
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { auditApi } from '../api/audit.api.js';
+import { agencyApi } from '../api/agency.api.js';
+import { useAuth } from '../hooks/useAuth.js';
 import { Card } from '../components/ui/Card.jsx';
 import { Badge } from '../components/ui/Badge.jsx';
 import { Button } from '../components/ui/Button.jsx';
-import { History, Shield, Filter, Search, ChevronLeft, ChevronRight } from 'lucide-react';
+import { History, Shield, Filter, Search, ChevronLeft, ChevronRight, Building2, Crown } from 'lucide-react';
 
 export function AuditLogPage() {
+  const { user } = useAuth();
+  const isSuperAdmin = user?.role === 'SUPER_ADMIN';
+
   const [entityType, setEntityType] = useState('');
   const [action, setAction] = useState('');
+  const [agencyId, setAgencyId] = useState('');
   const [page, setPage] = useState(1);
   const limit = 30;
 
+  // If superadmin, fetch all agencies for dropdown filter
+  const { data: agenciesData } = useQuery({
+    queryKey: ['agencies-list'],
+    queryFn: () => agencyApi.getAllAgencies(),
+    enabled: isSuperAdmin
+  });
+  const agencies = agenciesData?.agencies || [];
+
   const { data: auditData, isLoading } = useQuery({
-    queryKey: ['audit-logs', entityType, action, page],
-    queryFn: () => auditApi.list({ entityType, action, page, limit })
+    queryKey: ['audit-logs', entityType, action, agencyId, page],
+    queryFn: () => auditApi.list({ entityType, action, agencyId: agencyId || undefined, page, limit })
   });
 
   const logs = auditData?.logs || [];
@@ -24,17 +38,39 @@ export function AuditLogPage() {
     <div className="space-y-6 animate-fade-in">
       <div>
         <h2 className="text-xl sm:text-2xl font-bold tracking-tight flex items-center gap-2.5" style={{ color: 'var(--text-primary)' }}>
-          <History className="w-6 h-6" style={{ color: 'var(--accent)' }} />
-          System Audit Trail & Compliance Log
+          {isSuperAdmin ? <Crown className="w-6 h-6 text-amber-500" /> : <History className="w-6 h-6" style={{ color: 'var(--accent)' }} />}
+          {isSuperAdmin ? 'Global Platform Audit Trail & Compliance Log' : 'System Audit Trail & Compliance Log'}
         </h2>
         <p className="text-xs sm:text-sm mt-1" style={{ color: 'var(--text-secondary)' }}>
-          Immutable event log of every create, update, void, and delete operation performed across the system.
+          {isSuperAdmin
+            ? 'Immutable platform-wide audit log tracking actions across all agency tenants and platform operations.'
+            : 'Immutable event log of every create, update, void, and delete operation performed across your workspace.'}
         </p>
       </div>
 
       {/* Filter */}
       <Card>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className={`grid grid-cols-1 ${isSuperAdmin ? 'sm:grid-cols-3' : 'sm:grid-cols-2'} gap-4`}>
+          {isSuperAdmin && (
+            <div>
+              <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--text-secondary)' }}>
+                Agency Workspace
+              </label>
+              <select
+                value={agencyId}
+                onChange={(e) => { setAgencyId(e.target.value); setPage(1); }}
+                className="input-base text-sm cursor-pointer"
+              >
+                <option value="">All Agencies (Global)</option>
+                {agencies.map((ag) => (
+                  <option key={ag._id} value={ag._id}>
+                    {ag.name} ({ag.slug})
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+
           <div>
             <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--text-secondary)' }}>
               Entity Type
@@ -45,6 +81,7 @@ export function AuditLogPage() {
               className="input-base text-sm cursor-pointer"
             >
               <option value="">All Entities</option>
+              {isSuperAdmin && <option value="Agency">Agency / Tenants</option>}
               <option value="Transaction">Transactions</option>
               <option value="Client">Clients</option>
               <option value="Supplier">Suppliers</option>
@@ -92,6 +129,7 @@ export function AuditLogPage() {
             >
               <tr>
                 <th className="py-3 px-4">Timestamp</th>
+                {isSuperAdmin && <th className="py-3 px-4">Workspace / Agency</th>}
                 <th className="py-3 px-4">Performed By</th>
                 <th className="py-3 px-4">Action</th>
                 <th className="py-3 px-4">Entity</th>
@@ -104,13 +142,13 @@ export function AuditLogPage() {
             >
               {isLoading ? (
                 <tr>
-                  <td colSpan="5" className="py-12 text-center" style={{ color: 'var(--text-tertiary)' }}>
+                  <td colSpan={isSuperAdmin ? 6 : 5} className="py-12 text-center" style={{ color: 'var(--text-tertiary)' }}>
                     Loading audit history...
                   </td>
                 </tr>
               ) : logs.length === 0 ? (
                 <tr>
-                  <td colSpan="5" className="py-12 text-center" style={{ color: 'var(--text-tertiary)' }}>
+                  <td colSpan={isSuperAdmin ? 6 : 5} className="py-12 text-center" style={{ color: 'var(--text-tertiary)' }}>
                     No audit records found.
                   </td>
                 </tr>
@@ -125,6 +163,21 @@ export function AuditLogPage() {
                     <td className="py-3 px-4 whitespace-nowrap" style={{ color: 'var(--text-tertiary)' }}>
                       {new Date(log.timestamp).toLocaleString()}
                     </td>
+                    {isSuperAdmin && (
+                      <td className="py-3 px-4 whitespace-nowrap">
+                        {log.agency ? (
+                          <div className="flex items-center gap-1.5">
+                            <Building2 className="w-3.5 h-3.5 text-blue-500" />
+                            <span className="font-semibold text-primary">{log.agency.name}</span>
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-1.5">
+                            <Crown className="w-3.5 h-3.5 text-amber-500" />
+                            <span className="font-bold text-amber-600">Master Platform</span>
+                          </div>
+                        )}
+                      </td>
+                    )}
                     <td className="py-3 px-4">
                       <span className="font-semibold block" style={{ color: 'var(--text-primary)' }}>
                         {log.performedBy?.name || 'System / Setup'}

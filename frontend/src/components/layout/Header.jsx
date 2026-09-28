@@ -35,24 +35,45 @@ export function Header() {
 
           {/* Company branding */}
           <div className="flex items-center gap-2.5">
-            {logoUrl ? (
-              <img
-                src={getAssetUrl(logoUrl)}
-                alt="Logo"
-                className="h-8 w-auto object-contain max-w-[120px]"
-              />
-            ) : null}
-            <div className="hidden sm:block">
-              <h1
-                className="text-sm font-bold tracking-tight"
-                style={{ color: 'var(--text-primary)' }}
-              >
-                {companyName}
-              </h1>
-              <p className="text-[11px]" style={{ color: 'var(--text-tertiary)' }}>
-                {settings?.tagline || 'Travel & Aviation Management'}
-              </p>
-            </div>
+            {user?.role === 'SUPER_ADMIN' ? (
+              <div className="flex items-center gap-2">
+                <div
+                  className="w-8 h-8 rounded-lg flex items-center justify-center text-white shadow-sm flex-shrink-0"
+                  style={{ background: 'linear-gradient(135deg, #eab308, #a855f7)' }}
+                >
+                  <Crown className="w-4 h-4" />
+                </div>
+                <div className="hidden sm:block">
+                  <h1 className="text-sm font-bold tracking-tight" style={{ color: 'var(--text-primary)' }}>
+                    AeroDesk Master
+                  </h1>
+                  <p className="text-[11px] font-semibold text-[#eab308]">
+                    Platform Control Console
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <>
+                {logoUrl ? (
+                  <img
+                    src={getAssetUrl(logoUrl)}
+                    alt="Logo"
+                    className="h-8 w-auto object-contain max-w-[120px]"
+                  />
+                ) : null}
+                <div className="hidden sm:block">
+                  <h1
+                    className="text-sm font-bold tracking-tight"
+                    style={{ color: 'var(--text-primary)' }}
+                  >
+                    {companyName}
+                  </h1>
+                  <p className="text-[11px]" style={{ color: 'var(--text-tertiary)' }}>
+                    {settings?.tagline || 'Travel & Aviation Management'}
+                  </p>
+                </div>
+              </>
+            )}
           </div>
         </div>
 
