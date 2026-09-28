@@ -29,6 +29,9 @@ function HomeRoute() {
     return <Navigate to="/setup" replace />;
   }
   if (user) {
+    if (user.role === 'SUPER_ADMIN') {
+      return <Navigate to="/agencies" replace />;
+    }
     return <Navigate to="/dashboard" replace />;
   }
   return <LandingPage />;

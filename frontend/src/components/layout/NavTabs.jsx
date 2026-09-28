@@ -21,23 +21,25 @@ export function NavTabs() {
   const isAdmin = user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN';
   const isSuperAdmin = user?.role === 'SUPER_ADMIN';
 
-  const navItems = [
-    ...(isSuperAdmin ? [
-      { to: '/agencies', label: 'Tenants & Licensing', icon: Crown }
-    ] : []),
-    { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { to: '/invoice', label: 'Issue Tickets', icon: PlaneTakeoff },
-    { to: '/visa', label: 'Visa Invoice', icon: Stamp },
-    { to: '/receipts', label: 'Receipts', icon: Receipt },
-    { to: '/ledger', label: 'Ledger', icon: BookOpen },
-    { to: '/suppliers', label: 'Portals & Agencies', icon: Building2 },
-    { to: '/reports', label: 'Reports', icon: FileSpreadsheet },
-    { to: '/settings', label: 'Settings', icon: Settings },
-    ...(isAdmin ? [
-      { to: '/users', label: 'Users', icon: Users },
-      { to: '/audit-log', label: 'Audit Log', icon: History }
-    ] : [])
-  ];
+  const navItems = isSuperAdmin
+    ? [
+        { to: '/agencies', label: 'Tenants & Licensing', icon: Crown },
+        { to: '/audit-log', label: 'Global Audit Trail', icon: History }
+      ]
+    : [
+        { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+        { to: '/invoice', label: 'Issue Tickets', icon: PlaneTakeoff },
+        { to: '/visa', label: 'Visa Invoice', icon: Stamp },
+        { to: '/receipts', label: 'Receipts', icon: Receipt },
+        { to: '/ledger', label: 'Ledger', icon: BookOpen },
+        { to: '/suppliers', label: 'Portals & Agencies', icon: Building2 },
+        { to: '/reports', label: 'Reports', icon: FileSpreadsheet },
+        { to: '/settings', label: 'Settings', icon: Settings },
+        ...(isAdmin ? [
+          { to: '/users', label: 'Users', icon: Users },
+          { to: '/audit-log', label: 'Audit Log', icon: History }
+        ] : [])
+      ];
 
   return (
     <nav

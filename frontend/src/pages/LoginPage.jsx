@@ -15,14 +15,16 @@ export function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const from = location.state?.from?.pathname || '/dashboard';
+  const defaultHome = user?.role === 'SUPER_ADMIN' ? '/agencies' : '/dashboard';
+  const from = location.state?.from?.pathname || defaultHome;
 
   React.useEffect(() => {
     if (!authLoading) {
       if (setupRequired) {
         navigate('/setup', { replace: true });
       } else if (user) {
-        navigate(from, { replace: true });
+        const dest = user.role === 'SUPER_ADMIN' ? '/agencies' : from;
+        navigate(dest, { replace: true });
       }
     }
   }, [authLoading, setupRequired, user, navigate, from]);
@@ -34,8 +36,9 @@ export function LoginPage() {
     try {
       setLoading(true);
       setError('');
-      await login({ email, password });
-      navigate(from, { replace: true });
+      const data = await login({ email, password });
+      const dest = data?.user?.role === 'SUPER_ADMIN' ? '/agencies' : from;
+      navigate(dest, { replace: true });
     } catch (err) {
       setError(err.message || 'Invalid email or password.');
     } finally {

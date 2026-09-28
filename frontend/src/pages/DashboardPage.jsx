@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../hooks/useAuth.js';
 import { dashboardApi } from '../api/dashboard.api.js';
 import { StatCard } from '../components/ui/StatCard.jsx';
 import { Card } from '../components/ui/Card.jsx';
@@ -25,6 +26,13 @@ import {
 
 export function DashboardPage() {
   const navigate = useNavigate();
+  const { user } = useAuth();
+
+  React.useEffect(() => {
+    if (user?.role === 'SUPER_ADMIN') {
+      navigate('/agencies', { replace: true });
+    }
+  }, [user, navigate]);
 
   // Date range state for profit filter
   const today = new Date().toISOString().split('T')[0];

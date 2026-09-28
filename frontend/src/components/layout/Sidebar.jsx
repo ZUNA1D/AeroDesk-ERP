@@ -27,46 +27,50 @@ export function Sidebar() {
   const isAdmin = user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN';
   const isSuperAdmin = user?.role === 'SUPER_ADMIN';
 
-  const navGroups = [
-    ...(isSuperAdmin ? [{
-      label: 'Platform Control',
-      items: [
-        { to: '/agencies', label: 'Tenants & Licensing', icon: Crown },
+  const navGroups = isSuperAdmin
+    ? [
+        {
+          label: 'Platform Administration',
+          items: [
+            { to: '/agencies', label: 'Tenants & Licensing', icon: Crown },
+            { to: '/audit-log', label: 'Global Audit Trail', icon: History }
+          ]
+        }
       ]
-    }] : []),
-    {
-      label: 'Main',
-      items: [
-        { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-      ]
-    },
-    {
-      label: 'Transactions',
-      items: [
-        { to: '/invoice', label: 'Issue Tickets', icon: PlaneTakeoff },
-        { to: '/visa', label: 'Visa Invoice', icon: Stamp },
-        { to: '/receipts', label: 'Receipts', icon: Receipt },
-      ]
-    },
-    {
-      label: 'Finance',
-      items: [
-        { to: '/ledger', label: 'Ledger', icon: BookOpen },
-        { to: '/suppliers', label: 'Portals & Agencies', icon: Building2 },
-        { to: '/reports', label: 'Reports', icon: FileSpreadsheet },
-      ]
-    },
-    {
-      label: 'System',
-      items: [
-        { to: '/settings', label: 'Settings', icon: Settings },
-        ...(isAdmin ? [
-          { to: '/users', label: 'Users', icon: Users },
-          { to: '/audit-log', label: 'Audit Log', icon: History },
-        ] : []),
-      ]
-    },
-  ];
+    : [
+        {
+          label: 'Main',
+          items: [
+            { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+          ]
+        },
+        {
+          label: 'Transactions',
+          items: [
+            { to: '/invoice', label: 'Issue Tickets', icon: PlaneTakeoff },
+            { to: '/visa', label: 'Visa Invoice', icon: Stamp },
+            { to: '/receipts', label: 'Receipts', icon: Receipt },
+          ]
+        },
+        {
+          label: 'Finance',
+          items: [
+            { to: '/ledger', label: 'Ledger', icon: BookOpen },
+            { to: '/suppliers', label: 'Portals & Agencies', icon: Building2 },
+            { to: '/reports', label: 'Reports', icon: FileSpreadsheet },
+          ]
+        },
+        {
+          label: 'System',
+          items: [
+            { to: '/settings', label: 'Settings', icon: Settings },
+            ...(isAdmin ? [
+              { to: '/users', label: 'Users', icon: Users },
+              { to: '/audit-log', label: 'Audit Log', icon: History },
+            ] : []),
+          ]
+        },
+      ];
 
   const sidebarContent = (
     <div className="flex flex-col h-full">
@@ -170,13 +174,24 @@ export function Sidebar() {
           <div className="flex items-center gap-2.5">
             <div
               className="w-8 h-8 rounded-lg flex items-center justify-center text-white shadow-sm"
-              style={{ background: 'linear-gradient(135deg, #3b82f6, #10b981)' }}
+              style={{
+                background: isSuperAdmin
+                  ? 'linear-gradient(135deg, #eab308, #a855f7)'
+                  : 'linear-gradient(135deg, #3b82f6, #10b981)'
+              }}
             >
-              <Plane className="w-4 h-4 -rotate-45" />
+              {isSuperAdmin ? <Crown className="w-4 h-4" /> : <Plane className="w-4 h-4 -rotate-45" />}
             </div>
-            <span className="font-bold text-sm tracking-tight" style={{ color: 'var(--text-primary)' }}>
-              AeroDesk
-            </span>
+            <div>
+              <span className="font-bold text-sm tracking-tight block leading-tight" style={{ color: 'var(--text-primary)' }}>
+                {isSuperAdmin ? 'AeroDesk Master' : 'AeroDesk'}
+              </span>
+              {isSuperAdmin && (
+                <span className="text-[10px] font-bold text-[#eab308] uppercase tracking-wider block">
+                  Platform Owner
+                </span>
+              )}
+            </div>
           </div>
         </div>
         {sidebarContent}
@@ -202,15 +217,24 @@ export function Sidebar() {
           <div className="flex items-center gap-2.5">
             <div
               className="w-8 h-8 rounded-lg flex items-center justify-center text-white shadow-sm flex-shrink-0"
-              style={{ background: 'linear-gradient(135deg, #3b82f6, #10b981)' }}
+              style={{
+                background: isSuperAdmin
+                  ? 'linear-gradient(135deg, #eab308, #a855f7)'
+                  : 'linear-gradient(135deg, #3b82f6, #10b981)'
+              }}
             >
-              <Plane className="w-4 h-4 -rotate-45" />
+              {isSuperAdmin ? <Crown className="w-4 h-4" /> : <Plane className="w-4 h-4 -rotate-45" />}
             </div>
             {!isCollapsed && (
               <div className="animate-fade-in">
                 <div className="font-bold text-sm tracking-tight leading-none" style={{ color: 'var(--text-primary)' }}>
-                  AeroDesk
+                  {isSuperAdmin ? 'AeroDesk Master' : 'AeroDesk'}
                 </div>
+                {isSuperAdmin && (
+                  <div className="text-[10px] font-bold text-[#eab308] uppercase tracking-wider mt-0.5">
+                    Platform Owner
+                  </div>
+                )}
               </div>
             )}
           </div>
