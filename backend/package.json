@@ -10,6 +10,7 @@
     "build": "echo 'Backend ready'",
     "build:frontend": "echo 'No frontend build needed in backend'",
     "seed": "node src/scripts/seed.js",
+    "create:superadmin": "node src/scripts/createSuperAdmin.js",
     "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js --runInBand --detectOpenHandles"
   },
   "dependencies": {

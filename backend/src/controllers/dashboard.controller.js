@@ -1,3 +1,4 @@
+import mongoose from 'mongoose';
 import { Client } from '../models/Client.js';
 import { Supplier } from '../models/Supplier.js';
 import { Transaction } from '../models/transaction/Transaction.js';
@@ -6,6 +7,8 @@ export async function getDashboardSummary(req, res, next) {
   try {
     const todayStart = new Date();
     todayStart.setHours(0, 0, 0, 0);
+
+    const agencyObjectId = new mongoose.Types.ObjectId(req.agencyId);
 
     const [
       clientDueAgg,
@@ -17,27 +20,29 @@ export async function getDashboardSummary(req, res, next) {
       clientCount,
       supplierCount
     ] = await Promise.all([
-      // Total Client Due
+      // Total Client Due (isolated to this agency)
       Client.aggregate([
+        { $match: { agency: agencyObjectId } },
         { $group: { _id: null, total: { $sum: '$currentDue' } } }
       ]),
 
-      // Total Portal Wallet Balance
+      // Total Portal Wallet Balance (isolated to this agency)
       Supplier.aggregate([
-        { $match: { type: 'PORTAL', active: true } },
+        { $match: { agency: agencyObjectId, type: 'PORTAL', active: true } },
         { $group: { _id: null, total: { $sum: '$balance' } } }
       ]),
 
-      // Total Agency Due
+      // Total Agency Due (isolated to this agency)
       Supplier.aggregate([
-        { $match: { type: 'AGENCY', active: true } },
+        { $match: { agency: agencyObjectId, type: 'AGENCY', active: true } },
         { $group: { _id: null, total: { $sum: '$balance' } } }
       ]),
 
-      // All-Time Profit on ACTIVE Ticket & Visa Invoices
+      // All-Time Profit on ACTIVE Ticket & Visa Invoices (isolated to this agency)
       Transaction.aggregate([
         {
           $match: {
+            agency: agencyObjectId,
             type: { $in: ['TICKET_INVOICE', 'VISA_INVOICE'] },
             status: 'ACTIVE'
           }
@@ -53,10 +58,11 @@ export async function getDashboardSummary(req, res, next) {
         }
       ]),
 
-      // Today's Sales & Profit
+      // Today's Sales & Profit (isolated to this agency)
       Transaction.aggregate([
         {
           $match: {
+            agency: agencyObjectId,
             type: { $in: ['TICKET_INVOICE', 'VISA_INVOICE'] },
             status: 'ACTIVE',
             date: { $gte: todayStart }
@@ -72,16 +78,16 @@ export async function getDashboardSummary(req, res, next) {
         }
       ]),
 
-      // Recent Transactions
-      Transaction.find()
+      // Recent Transactions (isolated to this agency)
+      Transaction.find({ agency: req.agencyId })
         .populate('client', 'name')
         .populate('supplier', 'name type')
         .populate('createdBy', 'name')
         .sort({ date: -1, createdAt: -1 })
         .limit(8),
 
-      Client.countDocuments(),
-      Supplier.countDocuments({ active: true })
+      Client.countDocuments({ agency: req.agencyId }),
+      Supplier.countDocuments({ agency: req.agencyId, active: true })
     ]);
 
     const totalClientDue = clientDueAgg[0]?.total || 0;
@@ -116,6 +122,7 @@ export async function getFilteredProfit(req, res, next) {
     const { from, to } = req.query;
 
     const match = {
+      agency: new mongoose.Types.ObjectId(req.agencyId),
       type: { $in: ['TICKET_INVOICE', 'VISA_INVOICE'] },
       status: 'ACTIVE'
     };
@@ -164,6 +171,7 @@ export async function getExpiringDocuments(req, res, next) {
     futureDate.setDate(now.getDate() + 90); // Next 90 days
 
     const expiringClients = await Client.find({
+      agency: req.agencyId,
       passportExpiry: { $gte: now, $lte: futureDate }
     }).sort({ passportExpiry: 1 });
 

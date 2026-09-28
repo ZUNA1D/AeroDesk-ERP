@@ -1,6 +1,12 @@
 import mongoose from 'mongoose';
 
 const supplierSchema = new mongoose.Schema({
+  agency: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Agency',
+    required: true,
+    index: true
+  },
   name: {
     type: String,
     required: true,
@@ -44,6 +50,9 @@ const supplierSchema = new mongoose.Schema({
   timestamps: true
 });
 
-supplierSchema.index({ name: 'text', contactPerson: 'text' });
+supplierSchema.index({ agency: 1, name: 1 }, { unique: true });
+supplierSchema.index({ agency: 1, type: 1 });
+supplierSchema.index({ agency: 1, active: 1 });
 
 export const Supplier = mongoose.model('Supplier', supplierSchema);
+

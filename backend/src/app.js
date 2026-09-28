@@ -22,6 +22,8 @@ import dashboardRoutes from './routes/dashboard.routes.js';
 import settingsRoutes from './routes/settings.routes.js';
 import auditRoutes from './routes/audit.routes.js';
 import maintenanceRoutes from './routes/maintenance.routes.js';
+import agencyRoutes from './routes/agency.routes.js';
+
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -84,8 +86,10 @@ app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/settings', settingsRoutes);
 app.use('/api/audit-logs', auditRoutes);
 app.use('/api/maintenance', maintenanceRoutes);
+app.use('/api/agency', agencyRoutes);
 
 // Central error handler
+
 app.use(errorHandler);
 
 export default app;

@@ -4,6 +4,7 @@ import { User } from '../models/User.js';
 
 /**
  * Middleware to require authentication via httpOnly cookie or Authorization header
+ * Resolves agency context and attaches req.user and req.agencyId
  */
 export async function requireAuth(req, res, next) {
   try {
@@ -22,13 +23,24 @@ export async function requireAuth(req, res, next) {
     }
 
     const decoded = jwt.verify(token, env.JWT_SECRET);
-    const user = await User.findById(decoded.id).select('-passwordHash');
+    const user = await User.findById(decoded.id).select('-passwordHash').populate('agency');
 
     if (!user || !user.active) {
       return res.status(401).json({ message: 'User account is inactive or no longer exists.' });
     }
 
+    // Unless SUPER_ADMIN, user must belong to an active agency
+    if (user.role !== 'SUPER_ADMIN') {
+      if (!user.agency) {
+        return res.status(403).json({ message: 'Access denied. User is not assigned to any agency workspace.' });
+      }
+      if (user.agency.status === 'SUSPENDED') {
+        return res.status(403).json({ message: 'Agency workspace has been suspended. Please contact platform support.' });
+      }
+    }
+
     req.user = user;
+    req.agencyId = user.agency?._id || user.agency;
     next();
   } catch (err) {
     return res.status(401).json({ message: 'Invalid or expired session. Please log in again.' });
@@ -37,7 +49,7 @@ export async function requireAuth(req, res, next) {
 
 /**
  * Middleware to restrict access based on minimum role
- * Role hierarchy: ADMIN > MANAGER > STAFF
+ * Role hierarchy: SUPER_ADMIN > ADMIN > MANAGER > STAFF
  */
 export function requireRole(...allowedRoles) {
   return (req, res, next) => {
@@ -47,7 +59,7 @@ export function requireRole(...allowedRoles) {
 
     const userRole = req.user.role;
 
-    if (allowedRoles.includes(userRole) || userRole === 'ADMIN') {
+    if (userRole === 'SUPER_ADMIN' || allowedRoles.includes(userRole) || userRole === 'ADMIN') {
       return next();
     }
 
@@ -56,3 +68,14 @@ export function requireRole(...allowedRoles) {
     });
   };
 }
+
+/**
+ * Middleware ensuring request is made within a tenant agency context
+ */
+export function requireAgency(req, res, next) {
+  if (!req.agencyId) {
+    return res.status(400).json({ message: 'Agency context is required for this operation.' });
+  }
+  next();
+}
+

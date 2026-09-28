@@ -1,6 +1,12 @@
 import mongoose from 'mongoose';
 
 const clientSchema = new mongoose.Schema({
+  agency: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Agency',
+    required: true,
+    index: true
+  },
   name: {
     type: String,
     required: true,
@@ -56,7 +62,11 @@ const clientSchema = new mongoose.Schema({
   timestamps: true
 });
 
-// Index for search
-clientSchema.index({ name: 'text', phone: 'text', passportNo: 'text' });
+// Indexes for search scoped by agency
+clientSchema.index({ agency: 1, name: 1 });
+clientSchema.index({ agency: 1, phone: 1 });
+clientSchema.index({ agency: 1, passportNo: 1 });
+clientSchema.index({ agency: 1, currentDue: -1 });
 
 export const Client = mongoose.model('Client', clientSchema);
+

@@ -7,6 +7,7 @@ import { ProtectedRoute } from './components/layout/ProtectedRoute.jsx';
 import { LandingPage } from './pages/LandingPage.jsx';
 import { SetupPage } from './pages/SetupPage.jsx';
 import { LoginPage } from './pages/LoginPage.jsx';
+import { RegisterPage } from './pages/RegisterPage.jsx';
 import { DashboardPage } from './pages/DashboardPage.jsx';
 import { InvoicePage } from './pages/InvoicePage.jsx';
 import { VisaPage } from './pages/VisaPage.jsx';
@@ -47,11 +48,11 @@ export const router = createBrowserRouter([
   },
   {
     path: '/signup',
-    element: <Navigate to="/login" replace />
+    element: <RegisterPage />
   },
   {
     path: '/register',
-    element: <Navigate to="/login" replace />
+    element: <RegisterPage />
   },
   {
     path: '/setup',

@@ -2,8 +2,14 @@ import { Settings } from '../models/Settings.js';
 import { formatMoney } from '../utils/money.js';
 import { numberToWords } from '../utils/numberToWords.js';
 
-async function getCompanySettings() {
-  let settings = await Settings.findOne();
+async function getCompanySettings(agencyId = null) {
+  let settings = null;
+  if (agencyId) {
+    settings = await Settings.findOne({ agency: agencyId });
+  }
+  if (!settings) {
+    settings = await Settings.findOne();
+  }
   if (!settings) {
     settings = {
       companyName: 'AeroDesk',
@@ -21,10 +27,11 @@ async function getCompanySettings() {
 /**
  * Generate Money Receipt Voucher HTML
  */
-export async function renderMoneyReceiptHtml(receipt, client) {
-  const settings = await getCompanySettings();
+export async function renderMoneyReceiptHtml(receipt, client, agencyId = null) {
+  const settings = await getCompanySettings(agencyId || receipt.agency);
   const words = numberToWords(receipt.amount);
   const formattedAmount = formatMoney(receipt.amount);
+
 
   const logoMarkup = settings.logoUrl
     ? `<img src="${settings.logoUrl}" alt="Logo" style="max-height: 60px; max-width: 180px; object-fit: contain;" />`

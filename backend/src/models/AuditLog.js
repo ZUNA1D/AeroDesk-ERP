@@ -1,10 +1,15 @@
 import mongoose from 'mongoose';
 
 const auditLogSchema = new mongoose.Schema({
+  agency: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Agency',
+    index: true
+  },
   entityType: {
     type: String,
     required: true,
-    enum: ['Transaction', 'Client', 'Supplier', 'Airline', 'Sector', 'Settings', 'User', 'ExpenseCategory']
+    enum: ['Transaction', 'Client', 'Supplier', 'Airline', 'Sector', 'Settings', 'User', 'ExpenseCategory', 'Agency']
   },
   entityId: {
     type: mongoose.Schema.Types.ObjectId,
@@ -34,7 +39,9 @@ const auditLogSchema = new mongoose.Schema({
   }
 });
 
-auditLogSchema.index({ entityType: 1, entityId: 1, timestamp: -1 });
+auditLogSchema.index({ agency: 1, timestamp: -1 });
+auditLogSchema.index({ agency: 1, entityType: 1, entityId: 1, timestamp: -1 });
 auditLogSchema.index({ performedBy: 1, timestamp: -1 });
 
 export const AuditLog = mongoose.model('AuditLog', auditLogSchema);
+

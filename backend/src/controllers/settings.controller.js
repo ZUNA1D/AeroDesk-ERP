@@ -1,16 +1,19 @@
 import { Settings } from '../models/Settings.js';
+import { Agency } from '../models/Agency.js';
 import { writeAuditLog } from '../services/audit.service.js';
 
 export async function getSettings(req, res, next) {
   try {
-    let settings = await Settings.findOne();
+    let settings = await Settings.findOne({ agency: req.agencyId });
     if (!settings) {
+      const agency = await Agency.findById(req.agencyId);
       settings = await Settings.create({
-        companyName: 'AeroDesk',
+        agency: req.agencyId,
+        companyName: agency?.name || 'AeroDesk Agency',
         tagline: 'Travel & Aviation Agency Management ERP',
-        address: 'Dhaka, Bangladesh',
-        phone: '+880 1700-000000',
-        email: 'admin@aerodesk.com',
+        address: agency?.address || 'Dhaka, Bangladesh',
+        phone: agency?.phone || '+880 1700-000000',
+        email: agency?.email || 'admin@aerodesk.com',
         currency: 'BDT'
       });
     }
@@ -22,9 +25,9 @@ export async function getSettings(req, res, next) {
 
 export async function updateSettings(req, res, next) {
   try {
-    let settings = await Settings.findOne();
+    let settings = await Settings.findOne({ agency: req.agencyId });
     if (!settings) {
-      settings = new Settings();
+      settings = new Settings({ agency: req.agencyId });
     }
 
     const before = settings.toObject();
@@ -46,7 +49,13 @@ export async function updateSettings(req, res, next) {
 
     await settings.save();
 
+    // If companyName was updated, also update Agency.name
+    if (companyName) {
+      await Agency.findByIdAndUpdate(req.agencyId, { name: companyName.trim() });
+    }
+
     await writeAuditLog({
+      agency: req.agencyId,
       entityType: 'Settings',
       entityId: settings._id,
       action: 'UPDATE',

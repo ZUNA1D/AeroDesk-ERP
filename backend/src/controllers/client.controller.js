@@ -6,15 +6,19 @@ export async function listClients(req, res, next) {
   try {
     const { search, page = 1, limit = 50, sort = 'name' } = req.query;
 
-    const query = {};
+    const query = { agency: req.agencyId };
     if (search) {
       const searchRegex = new RegExp(search.trim(), 'i');
-      query.$or = [
-        { name: searchRegex },
-        { phone: searchRegex },
-        { email: searchRegex },
-        { passportNo: searchRegex },
-        { nid: searchRegex }
+      query.$and = [
+        {
+          $or: [
+            { name: searchRegex },
+            { phone: searchRegex },
+            { email: searchRegex },
+            { passportNo: searchRegex },
+            { nid: searchRegex }
+          ]
+        }
       ];
     }
 
@@ -47,12 +51,12 @@ export async function listClients(req, res, next) {
 export async function getClientById(req, res, next) {
   try {
     const { id } = req.params;
-    const client = await Client.findById(id);
+    const client = await Client.findOne({ _id: id, agency: req.agencyId });
     if (!client) {
       return res.status(404).json({ message: 'Client not found.' });
     }
 
-    const recentTransactions = await Transaction.find({ client: client._id })
+    const recentTransactions = await Transaction.find({ client: client._id, agency: req.agencyId })
       .sort({ date: -1 })
       .limit(10);
 
@@ -72,13 +76,14 @@ export async function createClient(req, res, next) {
 
     const nameUpper = name.trim().toUpperCase();
 
-    // Check if client with identical uppercase name exists
-    const existing = await Client.findOne({ name: nameUpper });
+    // Check if client with identical uppercase name exists within this agency
+    const existing = await Client.findOne({ agency: req.agencyId, name: nameUpper });
     if (existing) {
       return res.status(400).json({ message: `A client named "${nameUpper}" already exists.`, client: existing });
     }
 
     const client = await Client.create({
+      agency: req.agencyId,
       name: nameUpper,
       phone: phone?.trim(),
       email: email?.trim()?.toLowerCase(),
@@ -92,6 +97,7 @@ export async function createClient(req, res, next) {
     });
 
     await writeAuditLog({
+      agency: req.agencyId,
       entityType: 'Client',
       entityId: client._id,
       action: 'CREATE',
@@ -111,7 +117,7 @@ export async function updateClient(req, res, next) {
     const { id } = req.params;
     const { name, phone, email, address, passportNo, nid, passportExpiry, notes } = req.body;
 
-    const client = await Client.findById(id);
+    const client = await Client.findOne({ _id: id, agency: req.agencyId });
     if (!client) {
       return res.status(404).json({ message: 'Client not found.' });
     }
@@ -130,6 +136,7 @@ export async function updateClient(req, res, next) {
     await client.save();
 
     await writeAuditLog({
+      agency: req.agencyId,
       entityType: 'Client',
       entityId: client._id,
       action: 'UPDATE',
@@ -148,13 +155,13 @@ export async function updateClient(req, res, next) {
 export async function deleteClient(req, res, next) {
   try {
     const { id } = req.params;
-    const client = await Client.findById(id);
+    const client = await Client.findOne({ _id: id, agency: req.agencyId });
     if (!client) {
       return res.status(404).json({ message: 'Client not found.' });
     }
 
     // 409 Conflict guard: Check if any transactions reference this client
-    const txCount = await Transaction.countDocuments({ client: client._id });
+    const txCount = await Transaction.countDocuments({ client: client._id, agency: req.agencyId });
     if (txCount > 0) {
       return res.status(409).json({
         message: `Cannot delete client "${client.name}" because ${txCount} transaction(s) reference this client. Please void or reassign them first.`
@@ -162,9 +169,10 @@ export async function deleteClient(req, res, next) {
     }
 
     const before = client.toObject();
-    await Client.deleteOne({ _id: client._id });
+    await Client.deleteOne({ _id: client._id, agency: req.agencyId });
 
     await writeAuditLog({
+      agency: req.agencyId,
       entityType: 'Client',
       entityId: client._id,
       action: 'DELETE',
@@ -182,7 +190,7 @@ export async function deleteClient(req, res, next) {
 export async function uploadClientDocument(req, res, next) {
   try {
     const { id } = req.params;
-    const client = await Client.findById(id);
+    const client = await Client.findOne({ _id: id, agency: req.agencyId });
     if (!client) {
       return res.status(404).json({ message: 'Client not found.' });
     }

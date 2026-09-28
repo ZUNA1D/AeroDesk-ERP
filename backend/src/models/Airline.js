@@ -1,10 +1,15 @@
 import mongoose from 'mongoose';
 
 const airlineSchema = new mongoose.Schema({
+  agency: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Agency',
+    default: null,
+    index: true
+  },
   name: {
     type: String,
     required: true,
-    unique: true,
     uppercase: true,
     trim: true
   },
@@ -17,4 +22,7 @@ const airlineSchema = new mongoose.Schema({
   timestamps: true
 });
 
+airlineSchema.index({ agency: 1, name: 1 }, { unique: true });
+
 export const Airline = mongoose.model('Airline', airlineSchema);
+

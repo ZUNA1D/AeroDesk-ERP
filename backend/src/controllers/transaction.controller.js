@@ -29,7 +29,7 @@ export async function listTransactions(req, res, next) {
       limit = 50
     } = req.query;
 
-    const query = {};
+    const query = { agency: req.agencyId };
 
     if (status) {
       query.status = status;
@@ -63,14 +63,18 @@ export async function listTransactions(req, res, next) {
 
     if (search) {
       const searchRegex = new RegExp(search.trim(), 'i');
-      query.$or = [
-        { ref: searchRegex },
-        { 'passengers.name': searchRegex },
-        { 'passengers.ticketNo': searchRegex },
-        { 'passengers.pnr': searchRegex },
-        { 'passengers.visaNo': searchRegex },
-        { remarks: searchRegex },
-        { voidReason: searchRegex }
+      query.$and = [
+        {
+          $or: [
+            { ref: searchRegex },
+            { 'passengers.name': searchRegex },
+            { 'passengers.ticketNo': searchRegex },
+            { 'passengers.pnr': searchRegex },
+            { 'passengers.visaNo': searchRegex },
+            { remarks: searchRegex },
+            { voidReason: searchRegex }
+          ]
+        }
       ];
     }
 
@@ -118,7 +122,7 @@ export async function listTransactions(req, res, next) {
 export async function getTransactionById(req, res, next) {
   try {
     const { id } = req.params;
-    const transaction = await Transaction.findById(id)
+    const transaction = await Transaction.findOne({ _id: id, agency: req.agencyId })
       .populate('client')
       .populate('supplier')
       .populate('createdBy', 'name email')
@@ -139,7 +143,7 @@ export async function getTransactionById(req, res, next) {
 
 export async function handleCreateTicketInvoice(req, res, next) {
   try {
-    const invoice = await createTicketInvoice(req.body, req.user._id);
+    const invoice = await createTicketInvoice(req.body, req.user._id, req.agencyId);
     res.status(201).json({ message: 'Ticket invoice issued successfully.', transaction: invoice });
   } catch (err) {
     next(err);
@@ -148,7 +152,7 @@ export async function handleCreateTicketInvoice(req, res, next) {
 
 export async function handleCreateVisaInvoice(req, res, next) {
   try {
-    const invoice = await createVisaInvoice(req.body, req.user._id);
+    const invoice = await createVisaInvoice(req.body, req.user._id, req.agencyId);
     res.status(201).json({ message: 'Visa invoice issued successfully.', transaction: invoice });
   } catch (err) {
     next(err);
@@ -157,7 +161,7 @@ export async function handleCreateVisaInvoice(req, res, next) {
 
 export async function handleCreateClientReceipt(req, res, next) {
   try {
-    const receipt = await createClientReceipt(req.body, req.user._id);
+    const receipt = await createClientReceipt(req.body, req.user._id, req.agencyId);
     res.status(201).json({ message: 'Client receipt recorded successfully.', transaction: receipt });
   } catch (err) {
     next(err);
@@ -166,7 +170,7 @@ export async function handleCreateClientReceipt(req, res, next) {
 
 export async function handleCreateSupplierTxn(req, res, next) {
   try {
-    const txn = await createSupplierTxn(req.body, req.user._id);
+    const txn = await createSupplierTxn(req.body, req.user._id, req.agencyId);
     res.status(201).json({ message: 'Supplier transaction recorded successfully.', transaction: txn });
   } catch (err) {
     next(err);
@@ -175,7 +179,7 @@ export async function handleCreateSupplierTxn(req, res, next) {
 
 export async function handleCreateExpense(req, res, next) {
   try {
-    const expense = await createExpense(req.body, req.user._id);
+    const expense = await createExpense(req.body, req.user._id, req.agencyId);
     res.status(201).json({ message: 'Expense recorded successfully.', transaction: expense });
   } catch (err) {
     next(err);
@@ -184,7 +188,7 @@ export async function handleCreateExpense(req, res, next) {
 
 export async function handleCreateRefund(req, res, next) {
   try {
-    const refund = await createRefund(req.body, req.user._id);
+    const refund = await createRefund(req.body, req.user._id, req.agencyId);
     res.status(201).json({ message: 'Refund recorded successfully.', transaction: refund });
   } catch (err) {
     next(err);
@@ -194,7 +198,7 @@ export async function handleCreateRefund(req, res, next) {
 export async function handleEditTransaction(req, res, next) {
   try {
     const { id } = req.params;
-    const updated = await editTransaction(id, req.body, req.user._id);
+    const updated = await editTransaction(id, req.body, req.user._id, req.agencyId);
     res.json({ message: 'Transaction updated successfully.', transaction: updated });
   } catch (err) {
     next(err);
@@ -205,7 +209,7 @@ export async function handleVoidTransaction(req, res, next) {
   try {
     const { id } = req.params;
     const { reason } = req.body;
-    const voided = await voidTransaction(id, reason, req.user._id);
+    const voided = await voidTransaction(id, reason, req.user._id, req.agencyId);
     res.json({ message: 'Transaction voided successfully.', transaction: voided });
   } catch (err) {
     next(err);
@@ -215,7 +219,7 @@ export async function handleVoidTransaction(req, res, next) {
 export async function handleHardDeleteTransaction(req, res, next) {
   try {
     const { id } = req.params;
-    const result = await hardDeleteTransaction(id, req.user._id);
+    const result = await hardDeleteTransaction(id, req.user._id, req.agencyId);
     res.json({ message: 'Transaction deleted permanently.', result });
   } catch (err) {
     next(err);
@@ -225,12 +229,12 @@ export async function handleHardDeleteTransaction(req, res, next) {
 export async function handleGetReceiptPdf(req, res, next) {
   try {
     const { id } = req.params;
-    const receipt = await Transaction.findById(id).populate('client');
+    const receipt = await Transaction.findOne({ _id: id, agency: req.agencyId }).populate('client');
     if (!receipt) {
       return res.status(404).json({ message: 'Receipt not found.' });
     }
 
-    const html = await renderMoneyReceiptHtml(receipt, receipt.client);
+    const html = await renderMoneyReceiptHtml(receipt, receipt.client, req.agencyId);
     res.setHeader('Content-Type', 'text/html');
     res.send(html);
   } catch (err) {

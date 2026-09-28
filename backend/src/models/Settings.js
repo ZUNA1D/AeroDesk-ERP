@@ -1,6 +1,13 @@
 import mongoose from 'mongoose';
 
 const settingsSchema = new mongoose.Schema({
+  agency: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Agency',
+    required: true,
+    unique: true,
+    index: true
+  },
   companyName: {
     type: String,
     default: 'AeroDesk',
@@ -46,3 +53,4 @@ const settingsSchema = new mongoose.Schema({
 });
 
 export const Settings = mongoose.model('Settings', settingsSchema);
+

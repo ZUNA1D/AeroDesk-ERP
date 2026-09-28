@@ -1,5 +1,6 @@
 import mongoose from 'mongoose';
 import { MongoMemoryReplSet } from 'mongodb-memory-server';
+import { Agency } from '../src/models/Agency.js';
 import { User } from '../src/models/User.js';
 import { Client } from '../src/models/Client.js';
 import { Supplier } from '../src/models/Supplier.js';
@@ -14,6 +15,7 @@ import {
 } from '../src/services/transaction.service.js';
 
 let replSet;
+let testAgency;
 let testUser;
 let testClient;
 let portalSupplier;
@@ -25,12 +27,27 @@ beforeAll(async () => {
   await replSet.waitUntilRunning();
   const uri = replSet.getUri();
   await mongoose.connect(uri);
+  await Promise.all([
+    Agency.init(),
+    User.init(),
+    Client.init(),
+    Supplier.init(),
+    Transaction.init()
+  ]);
+
+  testAgency = await Agency.create({
+    name: 'Test Travel Agency',
+    slug: 'test-travel-agency',
+    phone: '01711111111',
+    email: 'agency@test.com'
+  });
 
   testUser = await User.create({
     name: 'Tester Admin',
     email: 'tester@test.com',
     passwordHash: 'hashed123',
-    role: 'ADMIN'
+    role: 'ADMIN',
+    agency: testAgency._id
   });
 }, 60000);
 
@@ -49,26 +66,30 @@ beforeEach(async () => {
   testClient = await Client.create({
     name: 'TEST TRAVELER',
     phone: '01700000000',
-    currentDue: 0
+    currentDue: 0,
+    agency: testAgency._id
   });
 
   portalSupplier = await Supplier.create({
     name: 'TEST PORTAL WALLET',
     type: 'PORTAL',
-    balance: 100000 // 1 Lakh initial wallet balance
+    balance: 100000, // 1 Lakh initial wallet balance
+    agency: testAgency._id
   });
 
   agencySupplier = await Supplier.create({
     name: 'TEST AGENCY CONSOLIDATOR',
     type: 'AGENCY',
-    balance: 0 // 0 initial payable
+    balance: 0, // 0 initial payable
+    agency: testAgency._id
   });
 
   directSupplier = await Supplier.create({
     name: 'IN-HOUSE / OWN STOCK',
     type: 'DIRECT',
     isSelf: true,
-    balance: 0
+    balance: 0,
+    agency: testAgency._id
   });
 });
 
@@ -80,7 +101,7 @@ describe('Double-Entry Balance Updates & Accounting Integrity', () => {
       passengers: [
         { name: 'JOHN DOE', cost: 40000, sell: 50000, ticketNo: '0981234567' }
       ]
-    }, testUser._id);
+    }, testUser._id, testAgency._id);
 
     expect(invoice.ref).toMatch(/^INVT-/);
     expect(invoice.totalBuy).toBe(40000);
@@ -103,7 +124,7 @@ describe('Double-Entry Balance Updates & Accounting Integrity', () => {
       passengers: [
         { name: 'JANE DOE', cost: 35000, sell: 42000, ticketNo: '0987654321' }
       ]
-    }, testUser._id);
+    }, testUser._id, testAgency._id);
 
     const updatedClient = await Client.findById(testClient._id);
     const updatedSupplier = await Supplier.findById(agencySupplier._id);
@@ -120,7 +141,7 @@ describe('Double-Entry Balance Updates & Accounting Integrity', () => {
       passengers: [
         { name: 'ALICE IN-HOUSE', cost: 20000, sell: 30000 }
       ]
-    }, testUser._id);
+    }, testUser._id, testAgency._id);
 
     const updatedDirect = await Supplier.findById(directSupplier._id);
     expect(updatedDirect.balance).toBe(0);
@@ -132,14 +153,14 @@ describe('Double-Entry Balance Updates & Accounting Integrity', () => {
       clientId: testClient._id,
       supplierId: portalSupplier._id,
       passengers: [{ name: 'JOHN', cost: 40000, sell: 50000 }]
-    }, testUser._id);
+    }, testUser._id, testAgency._id);
 
     // Receive 30,000 payment
     const receipt = await createClientReceipt({
       clientId: testClient._id,
       amount: 30000,
       mode: 'BANK'
-    }, testUser._id);
+    }, testUser._id, testAgency._id);
 
     expect(receipt.ref).toMatch(/^CRV-/);
 
@@ -153,7 +174,7 @@ describe('Double-Entry Balance Updates & Accounting Integrity', () => {
       supplierId: portalSupplier._id,
       amount: 50000,
       type: 'SUPPLIER_DEPOSIT'
-    }, testUser._id);
+    }, testUser._id, testAgency._id);
 
     const updatedSupplier = await Supplier.findById(portalSupplier._id);
     // 100,000 + 50,000 = 150,000
@@ -166,14 +187,14 @@ describe('Double-Entry Balance Updates & Accounting Integrity', () => {
       clientId: testClient._id,
       supplierId: portalSupplier._id,
       passengers: [{ name: 'TEST PAX', cost: 40000, sell: 50000 }]
-    }, testUser._id);
+    }, testUser._id, testAgency._id);
 
     // Edit invoice: change cost to 45000, sell to 60000 and switch supplier to Agency
     await editTransaction(invoice._id, {
       clientId: testClient._id,
       supplierId: agencySupplier._id,
       passengers: [{ name: 'TEST PAX MODIFIED', cost: 45000, sell: 60000 }]
-    }, testUser._id);
+    }, testUser._id, testAgency._id);
 
     const updatedClient = await Client.findById(testClient._id);
     const updatedPortal = await Supplier.findById(portalSupplier._id);
@@ -192,7 +213,7 @@ describe('Double-Entry Balance Updates & Accounting Integrity', () => {
       clientId: testClient._id,
       supplierId: portalSupplier._id,
       passengers: [{ name: 'VOIDING PAX', cost: 40000, sell: 50000 }]
-    }, testUser._id);
+    }, testUser._id, testAgency._id);
 
     // Verify balances modified
     let client = await Client.findById(testClient._id);
@@ -201,7 +222,7 @@ describe('Double-Entry Balance Updates & Accounting Integrity', () => {
     expect(supplier.balance).toBe(60000);
 
     // Void the transaction
-    const voided = await voidTransaction(invoice._id, 'Customer cancelled flight', testUser._id);
+    const voided = await voidTransaction(invoice._id, 'Customer cancelled flight', testUser._id, testAgency._id);
     expect(voided.status).toBe('VOIDED');
     expect(voided.voidReason).toBe('Customer cancelled flight');
 
@@ -219,19 +240,19 @@ describe('Double-Entry Balance Updates & Accounting Integrity', () => {
       clientId: testClient._id,
       supplierId: portalSupplier._id,
       passengers: [{ name: 'PAX 1', cost: 30000, sell: 40000 }]
-    }, testUser._id);
+    }, testUser._id, testAgency._id);
 
     await createClientReceipt({
       clientId: testClient._id,
       amount: 15000
-    }, testUser._id);
+    }, testUser._id, testAgency._id);
 
     // Manually corrupt the cached balances in the database to simulate drift
     await Client.updateOne({ _id: testClient._id }, { $set: { currentDue: 999999 } });
     await Supplier.updateOne({ _id: portalSupplier._id }, { $set: { balance: 999999 } });
 
     // Run the safety net recalculation
-    const result = await recalculateAllBalances(testUser._id);
+    const result = await recalculateAllBalances(testUser._id, testAgency._id);
     expect(result.success).toBe(true);
 
     const client = await Client.findById(testClient._id);

@@ -20,5 +20,9 @@ export const authApi = {
   getMe: async () => {
     const res = await api.get('/auth/me');
     return res.data;
+  },
+  registerAgency: async (data) => {
+    const res = await api.post('/auth/register', data);
+    return res.data;
   }
 };

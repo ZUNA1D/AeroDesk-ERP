@@ -1,6 +1,14 @@
 import mongoose from 'mongoose';
 
 const userSchema = new mongoose.Schema({
+  agency: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Agency',
+    index: true,
+    required: function() {
+      return this.role !== 'SUPER_ADMIN';
+    }
+  },
   name: {
     type: String,
     required: true,
@@ -19,7 +27,7 @@ const userSchema = new mongoose.Schema({
   },
   role: {
     type: String,
-    enum: ['ADMIN', 'MANAGER', 'STAFF'],
+    enum: ['SUPER_ADMIN', 'ADMIN', 'MANAGER', 'STAFF'],
     default: 'STAFF'
   },
   branch: {
@@ -34,4 +42,7 @@ const userSchema = new mongoose.Schema({
   timestamps: true
 });
 
+userSchema.index({ agency: 1, email: 1 });
+
 export const User = mongoose.model('User', userSchema);
+

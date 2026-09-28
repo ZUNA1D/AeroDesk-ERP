@@ -6,7 +6,7 @@ export async function listSuppliers(req, res, next) {
   try {
     const { type, active } = req.query;
 
-    const query = {};
+    const query = { agency: req.agencyId };
     if (type) query.type = type.toUpperCase();
     if (active !== undefined) query.active = active === 'true';
 
@@ -20,12 +20,12 @@ export async function listSuppliers(req, res, next) {
 export async function getSupplierById(req, res, next) {
   try {
     const { id } = req.params;
-    const supplier = await Supplier.findById(id);
+    const supplier = await Supplier.findOne({ _id: id, agency: req.agencyId });
     if (!supplier) {
       return res.status(404).json({ message: 'Supplier not found.' });
     }
 
-    const recentTransactions = await Transaction.find({ supplier: supplier._id })
+    const recentTransactions = await Transaction.find({ supplier: supplier._id, agency: req.agencyId })
       .sort({ date: -1 })
       .limit(10);
 
@@ -43,7 +43,13 @@ export async function createSupplier(req, res, next) {
       return res.status(400).json({ message: 'Supplier name and type (PORTAL, AGENCY, DIRECT) are required.' });
     }
 
+    const existing = await Supplier.findOne({ agency: req.agencyId, name: name.trim() });
+    if (existing) {
+      return res.status(400).json({ message: `A supplier named "${name.trim()}" already exists.`, supplier: existing });
+    }
+
     const supplier = await Supplier.create({
+      agency: req.agencyId,
       name: name.trim(),
       type: type.toUpperCase(),
       contactPerson: contactPerson?.trim(),
@@ -55,6 +61,7 @@ export async function createSupplier(req, res, next) {
     });
 
     await writeAuditLog({
+      agency: req.agencyId,
       entityType: 'Supplier',
       entityId: supplier._id,
       action: 'CREATE',
@@ -74,7 +81,7 @@ export async function updateSupplier(req, res, next) {
     const { id } = req.params;
     const { name, contactPerson, phone, email, creditLimit, active } = req.body;
 
-    const supplier = await Supplier.findById(id);
+    const supplier = await Supplier.findOne({ _id: id, agency: req.agencyId });
     if (!supplier) {
       return res.status(404).json({ message: 'Supplier not found.' });
     }
@@ -91,6 +98,7 @@ export async function updateSupplier(req, res, next) {
     await supplier.save();
 
     await writeAuditLog({
+      agency: req.agencyId,
       entityType: 'Supplier',
       entityId: supplier._id,
       action: 'UPDATE',
@@ -109,7 +117,7 @@ export async function updateSupplier(req, res, next) {
 export async function deleteSupplier(req, res, next) {
   try {
     const { id } = req.params;
-    const supplier = await Supplier.findById(id);
+    const supplier = await Supplier.findOne({ _id: id, agency: req.agencyId });
     if (!supplier) {
       return res.status(404).json({ message: 'Supplier not found.' });
     }
@@ -119,7 +127,7 @@ export async function deleteSupplier(req, res, next) {
     }
 
     // 409 Conflict guard
-    const txCount = await Transaction.countDocuments({ supplier: supplier._id });
+    const txCount = await Transaction.countDocuments({ supplier: supplier._id, agency: req.agencyId });
     if (txCount > 0) {
       return res.status(409).json({
         message: `Cannot delete supplier "${supplier.name}" because ${txCount} transaction(s) reference it. Please void or reassign them first.`
@@ -127,9 +135,10 @@ export async function deleteSupplier(req, res, next) {
     }
 
     const before = supplier.toObject();
-    await Supplier.deleteOne({ _id: supplier._id });
+    await Supplier.deleteOne({ _id: supplier._id, agency: req.agencyId });
 
     await writeAuditLog({
+      agency: req.agencyId,
       entityType: 'Supplier',
       entityId: supplier._id,
       action: 'DELETE',

@@ -3,7 +3,11 @@ import { Transaction } from '../models/transaction/Transaction.js';
 
 export async function listAirlines(req, res, next) {
   try {
-    const airlines = await Airline.find().sort({ name: 1 });
+    const query = req.agencyId
+      ? { $or: [{ agency: null }, { agency: req.agencyId }] }
+      : {};
+
+    const airlines = await Airline.find(query).sort({ name: 1 });
     res.json({ airlines });
   } catch (err) {
     next(err);
@@ -18,12 +22,17 @@ export async function createAirline(req, res, next) {
     }
 
     const nameUpper = name.trim().toUpperCase();
-    let airline = await Airline.findOne({ name: nameUpper });
-    if (airline) {
-      return res.status(400).json({ message: `Airline "${nameUpper}" already exists.`, airline });
+    const existing = await Airline.findOne({
+      name: nameUpper,
+      $or: [{ agency: null }, { agency: req.agencyId }]
+    });
+
+    if (existing) {
+      return res.status(400).json({ message: `Airline "${nameUpper}" already exists.`, airline: existing });
     }
 
-    airline = await Airline.create({
+    const airline = await Airline.create({
+      agency: req.agencyId || null,
       name: nameUpper,
       iataCode: iataCode?.trim()?.toUpperCase()
     });
@@ -42,13 +51,24 @@ export async function deleteAirline(req, res, next) {
       return res.status(404).json({ message: 'Airline not found.' });
     }
 
+    if (!airline.agency) {
+      return res.status(403).json({ message: 'Global default airlines cannot be deleted.' });
+    }
+
+    if (String(airline.agency) !== String(req.agencyId)) {
+      return res.status(403).json({ message: 'You can only delete custom airlines belonging to your agency.' });
+    }
+
     // Check if referenced
-    const txCount = await Transaction.countDocuments({ 'passengers.airline': airline._id });
+    const txCount = await Transaction.countDocuments({
+      'passengers.airline': airline._id,
+      agency: req.agencyId
+    });
     if (txCount > 0) {
       return res.status(409).json({ message: `Cannot delete airline "${airline.name}" as it is referenced in ${txCount} ticket invoice(s).` });
     }
 
-    await Airline.deleteOne({ _id: airline._id });
+    await Airline.deleteOne({ _id: airline._id, agency: req.agencyId });
     res.json({ message: `Airline ${airline.name} deleted.` });
   } catch (err) {
     next(err);

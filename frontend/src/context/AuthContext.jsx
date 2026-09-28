@@ -60,6 +60,14 @@ export function AuthProvider({ children }) {
     return data;
   };
 
+  const registerAgency = async (agencyData) => {
+    const data = await authApi.registerAgency(agencyData);
+    setUser(data.user);
+    setSetupRequired(false);
+    await fetchSettings();
+    return data;
+  };
+
   const logout = async () => {
     try {
       await authApi.logout();
@@ -76,6 +84,7 @@ export function AuthProvider({ children }) {
       setupRequired,
       login,
       setup,
+      registerAgency,
       logout,
       checkAuth,
       refreshSettings: fetchSettings

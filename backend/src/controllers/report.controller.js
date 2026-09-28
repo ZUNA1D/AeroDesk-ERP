@@ -14,7 +14,7 @@ export async function handleClientStatement(req, res, next) {
       return res.status(400).json({ message: 'Client ID is required.' });
     }
 
-    const data = await getClientStatement({ clientId, from, to });
+    const data = await getClientStatement({ clientId, from, to, agencyId: req.agencyId });
 
     if (format === 'pdf' || format === 'html') {
       const html = await renderStatementHtml({
@@ -24,7 +24,8 @@ export async function handleClientStatement(req, res, next) {
         period: data.period,
         openingBalance: data.openingDue,
         closingBalance: data.closingDue,
-        rows: data.rows
+        rows: data.rows,
+        agencyId: req.agencyId
       });
       res.setHeader('Content-Type', 'text/html');
       return res.send(html);
@@ -43,10 +44,9 @@ export async function handleSupplierStatement(req, res, next) {
       return res.status(400).json({ message: 'Supplier ID is required.' });
     }
 
-    const data = await getSupplierStatement({ supplierId, from, to });
+    const data = await getSupplierStatement({ supplierId, from, to, agencyId: req.agencyId });
 
     if (format === 'pdf' || format === 'html') {
-      const isPortal = data.supplier.type === 'PORTAL';
       const html = await renderStatementHtml({
         title: `${data.supplier.type} Supplier Statement`,
         partyName: `${data.supplier.name} (${data.supplier.type})`,
@@ -54,7 +54,8 @@ export async function handleSupplierStatement(req, res, next) {
         period: data.period,
         openingBalance: data.openingBalance,
         closingBalance: data.closingBalance,
-        rows: data.rows
+        rows: data.rows,
+        agencyId: req.agencyId
       });
       res.setHeader('Content-Type', 'text/html');
       return res.send(html);
@@ -69,7 +70,7 @@ export async function handleSupplierStatement(req, res, next) {
 export async function handleTicketProfitReport(req, res, next) {
   try {
     const { from, to, airlineId, clientId, supplierId } = req.query;
-    const data = await getTicketProfitReport({ from, to, airlineId, clientId, supplierId });
+    const data = await getTicketProfitReport({ from, to, airlineId, clientId, supplierId, agencyId: req.agencyId });
     res.json(data);
   } catch (err) {
     next(err);
@@ -79,7 +80,7 @@ export async function handleTicketProfitReport(req, res, next) {
 export async function handleVisaProfitReport(req, res, next) {
   try {
     const { from, to, sectorId, clientId, supplierId } = req.query;
-    const data = await getVisaProfitReport({ from, to, sectorId, clientId, supplierId });
+    const data = await getVisaProfitReport({ from, to, sectorId, clientId, supplierId, agencyId: req.agencyId });
     res.json(data);
   } catch (err) {
     next(err);
@@ -88,7 +89,7 @@ export async function handleVisaProfitReport(req, res, next) {
 
 export async function handleClientAgingReport(req, res, next) {
   try {
-    const data = await getClientAgingReport();
+    const data = await getClientAgingReport(req.agencyId);
     res.json(data);
   } catch (err) {
     next(err);

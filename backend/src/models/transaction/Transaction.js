@@ -7,10 +7,15 @@ const baseOptions = {
 };
 
 const transactionSchema = new mongoose.Schema({
+  agency: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Agency',
+    required: true,
+    index: true
+  },
   ref: {
     type: String,
     required: true,
-    unique: true,
     trim: true
   },
   date: {
@@ -64,9 +69,12 @@ const transactionSchema = new mongoose.Schema({
   }]
 }, baseOptions);
 
-transactionSchema.index({ type: 1, status: 1, date: -1 });
-transactionSchema.index({ client: 1, date: -1 });
-transactionSchema.index({ supplier: 1, date: -1 });
-transactionSchema.index({ date: -1 });
+// Compound uniqueness: each agency has its own isolated sequence of refs (e.g. INVT-2026-000001)
+transactionSchema.index({ agency: 1, ref: 1 }, { unique: true });
+transactionSchema.index({ agency: 1, type: 1, status: 1, date: -1 });
+transactionSchema.index({ agency: 1, client: 1, date: -1 });
+transactionSchema.index({ agency: 1, supplier: 1, date: -1 });
+transactionSchema.index({ agency: 1, date: -1 });
 
 export const Transaction = mongoose.model('Transaction', transactionSchema);
+

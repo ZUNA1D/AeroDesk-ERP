@@ -4,7 +4,7 @@ export async function listAuditLogs(req, res, next) {
   try {
     const { entityType, action, userId, from, to, page = 1, limit = 50 } = req.query;
 
-    const query = {};
+    const query = { agency: req.agencyId };
     if (entityType) query.entityType = entityType;
     if (action) query.action = action;
     if (userId) query.performedBy = userId;

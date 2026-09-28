@@ -1,6 +1,7 @@
 import { AuditLog } from '../models/AuditLog.js';
 
 export async function writeAuditLog({
+  agency = null,
   entityType,
   entityId,
   action,
@@ -12,6 +13,7 @@ export async function writeAuditLog({
 }) {
   try {
     const logData = {
+      agency,
       entityType,
       entityId,
       action,
@@ -31,3 +33,4 @@ export async function writeAuditLog({
     console.error(`[AuditLog] Failed to write audit log: ${err.message}`);
   }
 }
+

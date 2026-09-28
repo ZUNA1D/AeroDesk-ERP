@@ -5,17 +5,19 @@ import { Settings } from '../models/Settings.js';
 import mongoose from 'mongoose';
 
 /**
- * 1. Client Statement
+ * 1. Client Statement (isolated per agency)
  */
-export async function getClientStatement({ clientId, from, to }) {
-  const client = await Client.findById(clientId);
+export async function getClientStatement({ clientId, from, to, agencyId = null }) {
+  const clientQuery = { _id: clientId };
+  if (agencyId) clientQuery.agency = agencyId;
+
+  const client = await Client.findOne(clientQuery);
   if (!client) {
     throw new Error('Client not found.');
   }
 
   const fromDate = from ? new Date(from) : new Date(0);
   const toDate = to ? new Date(to) : new Date(8640000000000000);
-  // Ensure toDate includes end of day
   if (to) {
     toDate.setHours(23, 59, 59, 999);
   }
@@ -23,11 +25,14 @@ export async function getClientStatement({ clientId, from, to }) {
   // 1. Calculate Opening Balance (all ACTIVE txs before fromDate)
   let openingDue = 0;
   if (from) {
-    const priorTxs = await Transaction.find({
+    const priorQuery = {
       client: client._id,
       status: 'ACTIVE',
       date: { $lt: fromDate }
-    });
+    };
+    if (agencyId) priorQuery.agency = agencyId;
+
+    const priorTxs = await Transaction.find(priorQuery);
 
     for (const tx of priorTxs) {
       if (tx.type === 'TICKET_INVOICE' || tx.type === 'VISA_INVOICE') {
@@ -41,15 +46,18 @@ export async function getClientStatement({ clientId, from, to }) {
   }
 
   // 2. Fetch Period Transactions
-  const periodTxs = await Transaction.find({
+  const periodQuery = {
     client: client._id,
     status: 'ACTIVE',
     date: { $gte: fromDate, $lte: toDate }
-  })
-  .populate('supplier', 'name type')
-  .populate('passengers.airline', 'name iataCode')
-  .populate('passengers.sector', 'name')
-  .sort({ date: 1, createdAt: 1 });
+  };
+  if (agencyId) periodQuery.agency = agencyId;
+
+  const periodTxs = await Transaction.find(periodQuery)
+    .populate('supplier', 'name type')
+    .populate('passengers.airline', 'name iataCode')
+    .populate('passengers.sector', 'name')
+    .sort({ date: 1, createdAt: 1 });
 
   let periodDebit = 0; // Total billed
   let periodCredit = 0; // Total received
@@ -65,23 +73,23 @@ export async function getClientStatement({ clientId, from, to }) {
       periodDebit += debit;
       runningDue += debit;
       const paxNames = (tx.passengers || []).map(p => p.name).join(', ');
-      description = `Ticket Invoice (${tx.passengers?.length || 0} pax: ${paxNames})`;
+      description = `Ticket Invoice: ${paxNames || 'Passenger'}`;
     } else if (tx.type === 'VISA_INVOICE') {
       debit = Number(tx.totalSell) || 0;
       periodDebit += debit;
       runningDue += debit;
       const paxNames = (tx.passengers || []).map(p => p.name).join(', ');
-      description = `Visa Invoice (${tx.passengers?.length || 0} pax: ${paxNames})`;
+      description = `Visa Invoice: ${paxNames || 'Applicant'}`;
     } else if (tx.type === 'CLIENT_RECEIPT') {
       credit = Number(tx.amount) || 0;
       periodCredit += credit;
       runningDue -= credit;
-      description = `Money Receipt (${tx.mode}) - ${tx.remarks || ''}`;
+      description = `Money Receipt (${tx.mode || 'CASH'}) - ${tx.remarks || ''}`;
     } else if (tx.type === 'REFUND') {
       credit = Number(tx.clientRefundAmount || tx.amount) || 0;
       periodCredit += credit;
       runningDue -= credit;
-      description = `Refund: ${tx.reason || ''}`;
+      description = `Refund Credit: ${tx.reason || 'Reissue/Refund'}`;
     }
 
     return {
@@ -92,11 +100,9 @@ export async function getClientStatement({ clientId, from, to }) {
       description,
       debit,
       credit,
-      balance: Math.round(runningDue * 100) / 100
+      due: Math.round(runningDue * 100) / 100
     };
   });
-
-  const closingDue = Math.round(runningDue * 100) / 100;
 
   return {
     client: {
@@ -104,22 +110,26 @@ export async function getClientStatement({ clientId, from, to }) {
       name: client.name,
       phone: client.phone,
       email: client.email,
-      address: client.address
+      passportNo: client.passportNo,
+      currentDue: client.currentDue
     },
     period: { from, to },
     openingDue: Math.round(openingDue * 100) / 100,
-    periodDebit: Math.round(periodDebit * 100) / 100,
-    periodCredit: Math.round(periodCredit * 100) / 100,
-    closingDue,
+    totalBilled: Math.round(periodDebit * 100) / 100,
+    totalPaid: Math.round(periodCredit * 100) / 100,
+    closingDue: Math.round(runningDue * 100) / 100,
     rows
   };
 }
 
 /**
- * 2. Supplier Statement
+ * 2. Supplier Statement (isolated per agency)
  */
-export async function getSupplierStatement({ supplierId, from, to }) {
-  const supplier = await Supplier.findById(supplierId);
+export async function getSupplierStatement({ supplierId, from, to, agencyId = null }) {
+  const supplierQuery = { _id: supplierId };
+  if (agencyId) supplierQuery.agency = agencyId;
+
+  const supplier = await Supplier.findOne(supplierQuery);
   if (!supplier) {
     throw new Error('Supplier not found.');
   }
@@ -133,11 +143,14 @@ export async function getSupplierStatement({ supplierId, from, to }) {
   // 1. Calculate Opening Balance
   let openingBalance = 0;
   if (from && supplier.type !== 'DIRECT') {
-    const priorTxs = await Transaction.find({
+    const priorQuery = {
       supplier: supplier._id,
       status: 'ACTIVE',
       date: { $lt: fromDate }
-    });
+    };
+    if (agencyId) priorQuery.agency = agencyId;
+
+    const priorTxs = await Transaction.find(priorQuery);
 
     for (const tx of priorTxs) {
       if (tx.type === 'TICKET_INVOICE' || tx.type === 'VISA_INVOICE') {
@@ -153,13 +166,16 @@ export async function getSupplierStatement({ supplierId, from, to }) {
   }
 
   // 2. Fetch Period Transactions
-  const periodTxs = await Transaction.find({
+  const periodQuery = {
     supplier: supplier._id,
     status: 'ACTIVE',
     date: { $gte: fromDate, $lte: toDate }
-  })
-  .populate('client', 'name')
-  .sort({ date: 1, createdAt: 1 });
+  };
+  if (agencyId) periodQuery.agency = agencyId;
+
+  const periodTxs = await Transaction.find(periodQuery)
+    .populate('client', 'name')
+    .sort({ date: 1, createdAt: 1 });
 
   let totalCost = 0;
   let totalDepositsOrPayments = 0;
@@ -214,13 +230,14 @@ export async function getSupplierStatement({ supplierId, from, to }) {
 }
 
 /**
- * 3. Profit Report (Ticket)
+ * 3. Profit Report (Ticket - isolated per agency)
  */
-export async function getTicketProfitReport({ from, to, airlineId, clientId, supplierId }) {
+export async function getTicketProfitReport({ from, to, airlineId, clientId, supplierId, agencyId = null }) {
   const query = {
     type: 'TICKET_INVOICE',
     status: 'ACTIVE'
   };
+  if (agencyId) query.agency = agencyId;
 
   if (from || to) {
     query.date = {};
@@ -283,13 +300,14 @@ export async function getTicketProfitReport({ from, to, airlineId, clientId, sup
 }
 
 /**
- * 4. Profit Report (Visa)
+ * 4. Profit Report (Visa - isolated per agency)
  */
-export async function getVisaProfitReport({ from, to, sectorId, clientId, supplierId }) {
+export async function getVisaProfitReport({ from, to, sectorId, clientId, supplierId, agencyId = null }) {
   const query = {
     type: 'VISA_INVOICE',
     status: 'ACTIVE'
   };
+  if (agencyId) query.agency = agencyId;
 
   if (from || to) {
     query.date = {};
@@ -352,10 +370,13 @@ export async function getVisaProfitReport({ from, to, sectorId, clientId, suppli
 }
 
 /**
- * 5. Client Aging Report (0-30, 31-60, 61-90, 90+ days)
+ * 5. Client Aging Report (0-30, 31-60, 61-90, 90+ days - isolated per agency)
  */
-export async function getClientAgingReport() {
-  const clients = await Client.find({ currentDue: { $gt: 0 } }).sort({ currentDue: -1 });
+export async function getClientAgingReport(agencyId = null) {
+  const clientQuery = { currentDue: { $gt: 0 } };
+  if (agencyId) clientQuery.agency = agencyId;
+
+  const clients = await Client.find(clientQuery).sort({ currentDue: -1 });
   const now = new Date();
 
   const agingData = [];
@@ -368,11 +389,14 @@ export async function getClientAgingReport() {
   for (const client of clients) {
     grandTotalDue += client.currentDue;
     // Look at unpaid transactions
-    const txs = await Transaction.find({
+    const txQuery = {
       client: client._id,
       status: 'ACTIVE',
       type: { $in: ['TICKET_INVOICE', 'VISA_INVOICE'] }
-    }).sort({ date: -1 });
+    };
+    if (agencyId) txQuery.agency = agencyId;
+
+    const txs = await Transaction.find(txQuery).sort({ date: -1 });
 
     let b0_30 = 0, b31_60 = 0, b61_90 = 0, b90_plus = 0;
 
