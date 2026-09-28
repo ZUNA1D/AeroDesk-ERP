@@ -4,16 +4,23 @@ import { env } from './env.js';
 let mongodInstance = null;
 
 async function ensureCleanIndexes() {
-  try {
-    const txCollection = mongoose.connection.collection('transactions');
-    const indexes = await txCollection.indexes();
-    const legacyRefIndex = indexes.find(i => i.name === 'ref_1');
-    if (legacyRefIndex) {
-      await txCollection.dropIndex('ref_1');
-      console.log('[DB] Dropped legacy single-field unique index ref_1 on transactions');
+  const drops = [
+    { col: 'transactions', index: 'ref_1' },
+    { col: 'airlines', index: 'name_1' },
+    { col: 'sectors', index: 'name_1' }
+  ];
+
+  for (const { col, index } of drops) {
+    try {
+      const collection = mongoose.connection.collection(col);
+      const indexes = await collection.indexes();
+      if (indexes.some(i => i.name === index)) {
+        await collection.dropIndex(index);
+        console.log(`[DB] Dropped legacy index '${index}' on collection '${col}'`);
+      }
+    } catch (_) {
+      // Collection or index might not exist on a fresh DB, safe to ignore
     }
-  } catch (_) {
-    // collection might not exist yet on a fresh DB, safe to ignore
   }
 }
 
