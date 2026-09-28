@@ -29,8 +29,9 @@ async function getCompanySettings(agencyId = null) {
  */
 export async function renderMoneyReceiptHtml(receipt, client, agencyId = null) {
   const settings = await getCompanySettings(agencyId || receipt.agency);
-  const words = numberToWords(receipt.amount);
-  const formattedAmount = formatMoney(receipt.amount);
+  const amount = Number(receipt.amount ?? receipt.totalSell ?? 0);
+  const words = numberToWords(amount);
+  const formattedAmount = formatMoney(amount);
 
 
   const logoMarkup = settings.logoUrl

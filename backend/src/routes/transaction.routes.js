@@ -13,12 +13,12 @@ import {
   handleHardDeleteTransaction,
   handleGetReceiptPdf
 } from '../controllers/transaction.controller.js';
-import { requireAuth, requireRole } from '../middleware/auth.js';
+import { requireAuth, requireRole, optionalAuth } from '../middleware/auth.js';
 
 const router = Router();
 
-// Public/authenticated receipt voucher view
-router.get('/:id/receipt-pdf', handleGetReceiptPdf);
+// Printable receipt voucher view (resolves auth if present, or allows public voucher viewing)
+router.get('/:id/receipt-pdf', optionalAuth, handleGetReceiptPdf);
 
 router.use(requireAuth);
 

@@ -1,3 +1,4 @@
+import mongoose from 'mongoose';
 import { Transaction } from '../models/transaction/Transaction.js';
 import { ClientReceipt } from '../models/transaction/ClientReceipt.js';
 import { Client } from '../models/Client.js';
@@ -229,12 +230,25 @@ export async function handleHardDeleteTransaction(req, res, next) {
 export async function handleGetReceiptPdf(req, res, next) {
   try {
     const { id } = req.params;
-    const receipt = await Transaction.findOne({ _id: id, agency: req.agencyId }).populate('client');
+
+    const query = {};
+    if (mongoose.Types.ObjectId.isValid(id)) {
+      query._id = id;
+    } else {
+      query.ref = id;
+    }
+
+    if (req.agencyId) {
+      query.agency = req.agencyId;
+    }
+
+    const receipt = await Transaction.findOne(query).populate('client');
     if (!receipt) {
       return res.status(404).json({ message: 'Receipt not found.' });
     }
 
-    const html = await renderMoneyReceiptHtml(receipt, receipt.client, req.agencyId);
+    const agencyId = req.agencyId || receipt.agency;
+    const html = await renderMoneyReceiptHtml(receipt, receipt.client, agencyId);
     res.setHeader('Content-Type', 'text/html');
     res.send(html);
   } catch (err) {

@@ -79,3 +79,31 @@ export function requireAgency(req, res, next) {
   next();
 }
 
+/**
+ * Optional authentication: if token is present, resolves user and agency; otherwise proceeds
+ */
+export async function optionalAuth(req, res, next) {
+  try {
+    let token = req.cookies?.token;
+    if (!token && req.headers.authorization && req.headers.authorization.startsWith('Bearer ')) {
+      token = req.headers.authorization.split(' ')[1];
+    }
+    if (!token && req.query?.token) {
+      token = req.query.token;
+    }
+
+    if (token) {
+      const decoded = jwt.verify(token, env.JWT_SECRET);
+      const user = await User.findById(decoded.id).select('-passwordHash').populate('agency');
+      if (user && user.active) {
+        req.user = user;
+        req.agencyId = user.agency?._id || user.agency;
+      }
+    }
+  } catch (_) {
+    // Ignore invalid or expired token in optional auth
+  }
+  next();
+}
+
+
