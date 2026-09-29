@@ -121,14 +121,14 @@ export function AgenciesList({
 
               {/* Action Buttons */}
               <div className="flex items-center gap-1.5 flex-shrink-0">
-                <Button
-                  size="xs"
-                  variant="warning"
-                  icon={ArrowUpRight}
+                <button
+                  type="button"
                   onClick={() => onPay(agency)}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-white bg-amber-500 hover:bg-amber-600 active:scale-95 transition-all shadow-sm"
                 >
-                  Pay Due
-                </Button>
+                  <ArrowUpRight className="w-3.5 h-3.5 flex-shrink-0" />
+                  <span>Pay Due</span>
+                </button>
                 <button
                   type="button"
                   onClick={() => onEdit(agency)}

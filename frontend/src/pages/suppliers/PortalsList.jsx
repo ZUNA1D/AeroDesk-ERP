@@ -116,14 +116,14 @@ export function PortalsList({
 
               {/* Action Buttons */}
               <div className="flex items-center gap-1.5 flex-shrink-0">
-                <Button
-                  size="xs"
-                  variant="primary"
-                  icon={ArrowDownRight}
+                <button
+                  type="button"
                   onClick={() => onTopUp(portal)}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 active:scale-95 transition-all shadow-sm"
                 >
-                  Deposit
-                </Button>
+                  <ArrowDownRight className="w-3.5 h-3.5 flex-shrink-0" />
+                  <span>Deposit</span>
+                </button>
                 <button
                   type="button"
                   onClick={() => onEdit(portal)}

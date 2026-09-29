@@ -54,7 +54,8 @@ export function Button({
   };
 
   const sizes = {
-    sm: 'text-xs px-3 py-1.5 gap-1.5',
+    xs: 'text-xs px-2.5 py-1 gap-1.5 font-medium',
+    sm: 'text-xs px-3 py-1.5 gap-1.5 font-medium',
     md: 'text-sm px-4 py-2 gap-2',
     lg: 'text-sm px-5 py-2.5 gap-2',
   };
@@ -62,16 +63,16 @@ export function Button({
   return (
     <button
       disabled={disabled || loading}
-      className={twMerge(clsx(baseStyles, variants[variant], sizes[size], className))}
+      className={twMerge(clsx(baseStyles, variants[variant], sizes[size] || sizes.md, className))}
       style={getVariantStyle()}
       {...props}
     >
       {loading ? (
-        <Loader2 className="w-4 h-4 animate-spin text-current" />
+        <Loader2 className="w-4 h-4 animate-spin text-current flex-shrink-0" />
       ) : Icon ? (
-        <Icon className={clsx(size === 'sm' ? 'w-3.5 h-3.5' : 'w-4 h-4')} />
+        <Icon className={clsx(size === 'xs' || size === 'sm' ? 'w-3.5 h-3.5 flex-shrink-0' : 'w-4 h-4 flex-shrink-0')} />
       ) : null}
-      {children}
+      <span>{children}</span>
     </button>
   );
 }

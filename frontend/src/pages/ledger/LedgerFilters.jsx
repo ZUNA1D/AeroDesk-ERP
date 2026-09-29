@@ -1,8 +1,5 @@
-import React, { useState } from 'react';
-import { Card } from '../../components/ui/Card.jsx';
-import { Button } from '../../components/ui/Button.jsx';
-import { Combobox } from '../../components/ui/Combobox.jsx';
-import { Search, Filter, X, ChevronDown } from 'lucide-react';
+import React from 'react';
+import { Search, X, ChevronDown, Calendar, RotateCcw } from 'lucide-react';
 
 export function LedgerFilters({
   search,
@@ -23,187 +20,222 @@ export function LedgerFilters({
   suppliers = [],
   onReset
 }) {
-  const [showMobileFilters, setShowMobileFilters] = useState(false);
-
-  const clientOptions = clients.map((c) => ({
-    value: c._id,
-    label: c.name,
-    subtext: c.phone || ''
-  }));
-
-  const supplierOptions = suppliers.map((s) => ({
-    value: s._id,
-    label: s.name,
-    subtext: s.type
-  }));
-
   const activeFilterCount = [
     type,
     status !== 'ACTIVE' ? status : '',
     clientId,
     supplierId,
     from,
-    to
+    to,
+    search
   ].filter(Boolean).length;
 
   return (
-    <Card>
-      <div className="space-y-3">
-        {/* Top bar: Search + Mobile filter toggle */}
-        <div className="flex items-center gap-2">
-          <div className="relative flex-1">
-            <Search
-              className="w-4 h-4 absolute left-3 top-2.5"
-              style={{ color: 'var(--text-tertiary)' }}
-            />
-            <input
-              type="text"
-              placeholder="Search Ref, Pax, PNR, Ticket..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="input-base pl-9 text-xs w-full"
-            />
-            {search && (
-              <button
-                type="button"
-                onClick={() => setSearch('')}
-                className="absolute right-3 top-2.5 p-0.5 rounded hover:opacity-70"
-              >
-                <X className="w-3.5 h-3.5" style={{ color: 'var(--text-tertiary)' }} />
-              </button>
-            )}
-          </div>
-
-          <button
-            type="button"
-            onClick={() => setShowMobileFilters(!showMobileFilters)}
-            className="lg:hidden flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold border transition-colors hover:bg-surface-secondary"
-            style={{ borderColor: 'var(--border)', backgroundColor: 'var(--surface)' }}
-          >
-            <Filter className="w-3.5 h-3.5 text-accent" />
-            <span>Filters</span>
-            {activeFilterCount > 0 && (
-              <span className="w-4 h-4 rounded-full bg-accent text-white text-[10px] flex items-center justify-center font-bold">
-                {activeFilterCount}
-              </span>
-            )}
-            <ChevronDown className={`w-3.5 h-3.5 transition-transform ${showMobileFilters ? 'rotate-180' : ''}`} />
-          </button>
+    <div
+      className="p-4 rounded-xl border space-y-3 shadow-sm transition-all"
+      style={{
+        backgroundColor: 'var(--surface)',
+        borderColor: 'var(--border)'
+      }}
+    >
+      {/* Row 1: Search + Transaction Type + Status + Clients */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+        {/* 1. Search Bar */}
+        <div className="relative">
+          <Search
+            className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none"
+            style={{ color: 'var(--text-tertiary)' }}
+          />
+          <input
+            type="text"
+            placeholder="Search Ref, Pax, PNR, Ticket..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-full pl-9 pr-8 py-2 text-xs rounded-lg border transition-all focus:outline-none focus:ring-1 focus:ring-accent"
+            style={{
+              backgroundColor: 'var(--surface-secondary)',
+              borderColor: 'var(--border)',
+              color: 'var(--text-primary)'
+            }}
+          />
+          {search && (
+            <button
+              type="button"
+              onClick={() => setSearch('')}
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 p-0.5 rounded hover:opacity-70"
+            >
+              <X className="w-3.5 h-3.5" style={{ color: 'var(--text-tertiary)' }} />
+            </button>
+          )}
         </div>
 
-        {/* Filter controls: Always visible on desktop (lg:grid), collapsible on mobile */}
-        <div
-          className={`${
-            showMobileFilters ? 'block' : 'hidden'
-          } lg:block space-y-3 pt-2 lg:pt-0`}
-        >
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-            {/* Type Filter */}
-            <div>
-              <label className="block text-[11px] font-semibold mb-1" style={{ color: 'var(--text-tertiary)' }}>
-                Transaction Type
-              </label>
-              <select
-                value={type}
-                onChange={(e) => setType(e.target.value)}
-                className="input-base text-xs cursor-pointer w-full"
-              >
-                <option value="">All Transaction Types</option>
-                <option value="TICKET_INVOICE">Air Ticket Invoices</option>
-                <option value="VISA_INVOICE">Visa Invoices</option>
-                <option value="CLIENT_RECEIPT">Client Money Receipts</option>
-                <option value="SUPPLIER_DEPOSIT">Supplier Portal Deposits</option>
-                <option value="SUPPLIER_PAYMENT">Supplier Agency Payments</option>
-                <option value="SUPPLIER_DEBIT_MEMO">ADM (Debit Memos)</option>
-                <option value="SUPPLIER_CREDIT_MEMO">ACM (Credit Memos)</option>
-                <option value="REFUND">Refunds & Reissues</option>
-                <option value="EXPENSE">Office Expenses</option>
-              </select>
-            </div>
-
-            {/* Status Filter */}
-            <div>
-              <label className="block text-[11px] font-semibold mb-1" style={{ color: 'var(--text-tertiary)' }}>
-                Status
-              </label>
-              <select
-                value={status}
-                onChange={(e) => setStatus(e.target.value)}
-                className="input-base text-xs cursor-pointer w-full"
-              >
-                <option value="">All Statuses (Active + Voided)</option>
-                <option value="ACTIVE">Active Transactions Only</option>
-                <option value="VOIDED">Voided Transactions Only</option>
-              </select>
-            </div>
-
-            {/* Client Filter Combobox */}
-            <div>
-              <label className="block text-[11px] font-semibold mb-1" style={{ color: 'var(--text-tertiary)' }}>
-                Client
-              </label>
-              <Combobox
-                placeholder="All Clients"
-                searchPlaceholder="Search client..."
-                value={clientId}
-                onChange={setClientId}
-                options={clientOptions}
-              />
-            </div>
-
-            {/* Supplier Filter Combobox */}
-            <div>
-              <label className="block text-[11px] font-semibold mb-1" style={{ color: 'var(--text-tertiary)' }}>
-                Supplier
-              </label>
-              <Combobox
-                placeholder="All Suppliers"
-                searchPlaceholder="Search supplier..."
-                value={supplierId}
-                onChange={setSupplierId}
-                options={supplierOptions}
-              />
-            </div>
-          </div>
-
-          {/* Date range & Reset bar */}
-          <div
-            className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-2 border-t text-xs"
-            style={{ borderColor: 'var(--border)' }}
+        {/* 2. All Transaction Types Dropdown */}
+        <div className="relative">
+          <select
+            value={type}
+            onChange={(e) => setType(e.target.value)}
+            className="w-full appearance-none pl-3 pr-8 py-2 text-xs rounded-lg border cursor-pointer transition-all focus:outline-none focus:ring-1 focus:ring-accent"
+            style={{
+              backgroundColor: 'var(--surface-secondary)',
+              borderColor: 'var(--border)',
+              color: type ? 'var(--text-primary)' : 'var(--text-secondary)'
+            }}
           >
-            <div className="flex items-center gap-2 flex-wrap">
-              <span className="text-[11px]" style={{ color: 'var(--text-tertiary)' }}>
-                Date Range:
-              </span>
-              <input
-                type="date"
-                value={from}
-                onChange={(e) => setFrom(e.target.value)}
-                className="input-base text-xs py-1 px-2"
-                placeholder="From"
-              />
-              <span style={{ color: 'var(--text-tertiary)' }}>to</span>
-              <input
-                type="date"
-                value={to}
-                onChange={(e) => setTo(e.target.value)}
-                className="input-base text-xs py-1 px-2"
-                placeholder="To"
-              />
-            </div>
+            <option value="">All Transaction Types</option>
+            <option value="TICKET_INVOICE">Air Ticket Invoices</option>
+            <option value="VISA_INVOICE">Visa Invoices</option>
+            <option value="CLIENT_RECEIPT">Client Money Receipts</option>
+            <option value="SUPPLIER_DEPOSIT">Supplier Portal Deposits</option>
+            <option value="SUPPLIER_PAYMENT">Supplier Agency Payments</option>
+            <option value="SUPPLIER_DEBIT_MEMO">ADM (Debit Memos)</option>
+            <option value="SUPPLIER_CREDIT_MEMO">ACM (Credit Memos)</option>
+            <option value="REFUND">Refunds & Reissues</option>
+            <option value="EXPENSE">Office Expenses</option>
+          </select>
+          <ChevronDown
+            className="w-3.5 h-3.5 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none"
+            style={{ color: 'var(--text-tertiary)' }}
+          />
+        </div>
 
-            {(activeFilterCount > 0 || search) && (
-              <button
-                type="button"
-                onClick={onReset}
-                className="text-[11px] font-semibold text-danger hover:underline self-end sm:self-auto py-1"
-              >
-                Clear All Filters
-              </button>
-            )}
-          </div>
+        {/* 3. Status Dropdown */}
+        <div className="relative">
+          <select
+            value={status}
+            onChange={(e) => setStatus(e.target.value)}
+            className="w-full appearance-none pl-3 pr-8 py-2 text-xs rounded-lg border cursor-pointer transition-all focus:outline-none focus:ring-1 focus:ring-accent"
+            style={{
+              backgroundColor: 'var(--surface-secondary)',
+              borderColor: 'var(--border)',
+              color: 'var(--text-primary)'
+            }}
+          >
+            <option value="ACTIVE">Active Transactions Only</option>
+            <option value="">All Statuses (Active + Voided)</option>
+            <option value="VOIDED">Voided Transactions Only</option>
+          </select>
+          <ChevronDown
+            className="w-3.5 h-3.5 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none"
+            style={{ color: 'var(--text-tertiary)' }}
+          />
+        </div>
+
+        {/* 4. Clients Dropdown */}
+        <div className="relative">
+          <select
+            value={clientId}
+            onChange={(e) => setClientId(e.target.value)}
+            className="w-full appearance-none pl-3 pr-8 py-2 text-xs rounded-lg border cursor-pointer transition-all focus:outline-none focus:ring-1 focus:ring-accent"
+            style={{
+              backgroundColor: 'var(--surface-secondary)',
+              borderColor: 'var(--border)',
+              color: clientId ? 'var(--text-primary)' : 'var(--text-secondary)'
+            }}
+          >
+            <option value="">All Clients</option>
+            {clients.map((c) => (
+              <option key={c._id} value={c._id}>
+                {c.name} {c.phone ? `(${c.phone})` : ''}
+              </option>
+            ))}
+          </select>
+          <ChevronDown
+            className="w-3.5 h-3.5 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none"
+            style={{ color: 'var(--text-tertiary)' }}
+          />
         </div>
       </div>
-    </Card>
+
+      {/* Row 2: All Suppliers + From Date + To Date */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-3 items-center">
+        {/* 1. Suppliers Dropdown */}
+        <div className="relative lg:col-span-4">
+          <select
+            value={supplierId}
+            onChange={(e) => setSupplierId(e.target.value)}
+            className="w-full appearance-none pl-3 pr-8 py-2 text-xs rounded-lg border cursor-pointer transition-all focus:outline-none focus:ring-1 focus:ring-accent"
+            style={{
+              backgroundColor: 'var(--surface-secondary)',
+              borderColor: 'var(--border)',
+              color: supplierId ? 'var(--text-primary)' : 'var(--text-secondary)'
+            }}
+          >
+            <option value="">All Suppliers</option>
+            {suppliers.map((s) => (
+              <option key={s._id} value={s._id}>
+                {s.name} ({s.type})
+              </option>
+            ))}
+          </select>
+          <ChevronDown
+            className="w-3.5 h-3.5 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none"
+            style={{ color: 'var(--text-tertiary)' }}
+          />
+        </div>
+
+        {/* 2. From Date Picker */}
+        <div
+          className="flex items-center rounded-lg border px-3 py-1.5 lg:col-span-4"
+          style={{
+            backgroundColor: 'var(--surface-secondary)',
+            borderColor: 'var(--border)'
+          }}
+        >
+          <span
+            className="text-xs font-normal mr-2 select-none flex-shrink-0"
+            style={{ color: 'var(--text-tertiary)' }}
+          >
+            From:
+          </span>
+          <input
+            type="date"
+            value={from}
+            onChange={(e) => setFrom(e.target.value)}
+            className="bg-transparent border-0 outline-none text-xs w-full cursor-pointer"
+            style={{ color: 'var(--text-primary)' }}
+          />
+        </div>
+
+        {/* 3. To Date Picker */}
+        <div
+          className="flex items-center rounded-lg border px-3 py-1.5 lg:col-span-4"
+          style={{
+            backgroundColor: 'var(--surface-secondary)',
+            borderColor: 'var(--border)'
+          }}
+        >
+          <span
+            className="text-xs font-normal mr-2 select-none flex-shrink-0"
+            style={{ color: 'var(--text-tertiary)' }}
+          >
+            To:
+          </span>
+          <input
+            type="date"
+            value={to}
+            onChange={(e) => setTo(e.target.value)}
+            className="bg-transparent border-0 outline-none text-xs w-full cursor-pointer"
+            style={{ color: 'var(--text-primary)' }}
+          />
+        </div>
+      </div>
+
+      {/* Active Filter Clear Bar (appears when filters are applied) */}
+      {activeFilterCount > 0 && (
+        <div className="flex items-center justify-between pt-1 text-xs">
+          <span className="text-[11px]" style={{ color: 'var(--text-tertiary)' }}>
+            {activeFilterCount} filter{activeFilterCount > 1 ? 's' : ''} applied
+          </span>
+          <button
+            type="button"
+            onClick={onReset}
+            className="inline-flex items-center gap-1 text-[11px] font-semibold text-danger hover:underline"
+          >
+            <RotateCcw className="w-3 h-3" />
+            <span>Reset All Filters</span>
+          </button>
+        </div>
+      )}
+    </div>
   );
 }

@@ -185,9 +185,19 @@ export function LedgerPage() {
         </div>
 
         <div className="flex items-center gap-2">
-          <Button size="sm" variant="secondary" icon={FileSpreadsheet} onClick={handleExportCsv}>
-            Export CSV
-          </Button>
+          <button
+            type="button"
+            onClick={handleExportCsv}
+            className="inline-flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-semibold border transition-all hover:bg-surface-secondary shadow-sm"
+            style={{
+              backgroundColor: 'var(--surface)',
+              borderColor: 'var(--border)',
+              color: 'var(--text-primary)'
+            }}
+          >
+            <FileSpreadsheet className="w-4 h-4 text-theme-text-tertiary" />
+            <span>Export CSV</span>
+          </button>
         </div>
       </div>
 
@@ -239,22 +249,22 @@ export function LedgerPage() {
                 }}
               >
                 <tr>
-                  <th className="py-3 px-3 w-8 text-center"></th>
-                  <th className="py-3 px-3">Date</th>
-                  <th className="py-3 px-3">Ref</th>
-                  <th className="py-3 px-3">Type</th>
-                  <th className="py-3 px-3">Party (Client / Supplier)</th>
-                  <th className="py-3 px-3 text-right">Debit (Sell)</th>
-                  <th className="py-3 px-3 text-right">Credit (Buy/Pay)</th>
-                  <th className="py-3 px-3 text-right">Net Profit</th>
-                  <th className="py-3 px-3 text-center">Status</th>
-                  <th className="py-3 px-3 text-right">Actions</th>
+                  <th className="py-3 px-4">DATE</th>
+                  <th className="py-3 px-4">REF NO</th>
+                  <th className="py-3 px-4">TYPE</th>
+                  <th className="py-3 px-4">PARTY (CLIENT / SUPPLIER)</th>
+                  <th className="py-3 px-4 text-right">DEBIT / SELL</th>
+                  <th className="py-3 px-4 text-right">CREDIT / COST</th>
+                  <th className="py-3 px-4 text-right">NET PROFIT</th>
+                  <th className="py-3 px-4 text-center">STATUS</th>
+                  <th className="py-3 px-4 text-right">ACTIONS</th>
                 </tr>
               </thead>
               <tbody className="divide-y font-medium" style={{ borderColor: 'var(--border)' }}>
                 {transactions.map((tx) => {
                   const isExpanded = Boolean(expandedRows[tx._id]);
                   const isVoided = tx.status === 'VOIDED';
+                  const hasDetails = tx.passengers?.length > 0 || tx.remarks || tx.voidReason;
 
                   return (
                     <React.Fragment key={tx._id}>
@@ -265,29 +275,29 @@ export function LedgerPage() {
                             : 'hover:bg-[var(--table-row-hover)]'
                         }`}
                       >
-                        <td className="py-3 px-3 text-center">
-                          {(tx.passengers?.length > 0 || tx.remarks || tx.voidReason) && (
-                            <button
-                              type="button"
-                              onClick={() => toggleRow(tx._id)}
-                              className="p-1.5 rounded transition-colors text-theme-text-tertiary hover:bg-surface-secondary"
-                              aria-label="Expand row details"
-                            >
-                              {isExpanded ? (
-                                <ChevronDown className="w-3.5 h-3.5" />
-                              ) : (
-                                <ChevronRight className="w-3.5 h-3.5" />
-                              )}
-                            </button>
-                          )}
-                        </td>
-                        <td className="py-3 px-3 whitespace-nowrap text-theme-text-secondary">
+                        <td className="py-3.5 px-4 whitespace-nowrap text-theme-text-secondary">
                           {new Date(tx.date).toLocaleDateString('en-GB')}
                         </td>
-                        <td className="py-3 px-3 font-mono font-bold text-accent whitespace-nowrap">
-                          {tx.ref}
+                        <td className="py-3.5 px-4 font-mono font-bold text-accent whitespace-nowrap">
+                          <div className="flex items-center gap-1.5">
+                            {hasDetails && (
+                              <button
+                                type="button"
+                                onClick={() => toggleRow(tx._id)}
+                                className="p-1 rounded transition-colors text-theme-text-tertiary hover:bg-surface-secondary"
+                                aria-label="Expand row details"
+                              >
+                                {isExpanded ? (
+                                  <ChevronDown className="w-3.5 h-3.5 text-accent" />
+                                ) : (
+                                  <ChevronRight className="w-3.5 h-3.5" />
+                                )}
+                              </button>
+                            )}
+                            <span>{tx.ref}</span>
+                          </div>
                         </td>
-                        <td className="py-3 px-3">
+                        <td className="py-3.5 px-4">
                           <Badge
                             variant={
                               isVoided
@@ -389,7 +399,7 @@ export function LedgerPage() {
                       {isExpanded && (
                         <tr>
                           <td
-                            colSpan="10"
+                            colSpan="9"
                             className="p-4 border-y text-xs bg-surface-secondary"
                             style={{ borderColor: 'var(--border)' }}
                           >
