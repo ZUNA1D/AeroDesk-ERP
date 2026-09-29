@@ -1,4 +1,5 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 import { clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
@@ -12,6 +13,12 @@ export function Modal({
   maxWidth = 'max-w-2xl',
   className
 }) {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (e.key === 'Escape' && isOpen) {
@@ -28,23 +35,32 @@ export function Modal({
     };
   }, [isOpen, onClose]);
 
-  if (!isOpen) return null;
+  if (!isOpen || !mounted) return null;
 
-  return (
-    <div className="fixed inset-0 z-50 overflow-y-auto">
-      {/* Backdrop */}
+  return createPortal(
+    <div
+      className="fixed inset-0 z-50 overflow-y-auto"
+      role="dialog"
+      aria-modal="true"
+    >
+      {/* Backdrop spanning full screen */}
       <div
-        className="fixed inset-0 backdrop-blur-sm transition-opacity animate-fade-in"
-        style={{ backgroundColor: 'var(--modal-backdrop)' }}
+        className="fixed inset-0 transition-opacity animate-fade-in"
+        style={{
+          backgroundColor: 'var(--modal-backdrop)',
+          backdropFilter: 'blur(4px)',
+          WebkitBackdropFilter: 'blur(4px)'
+        }}
         onClick={onClose}
+        aria-hidden="true"
       />
 
-      {/* Modal Dialog */}
-      <div className="flex min-h-full items-center justify-center p-4">
+      {/* Modal Dialog centering container */}
+      <div className="flex min-h-screen items-center justify-center p-4 relative z-10 pointer-events-none">
         <div
           className={twMerge(
             clsx(
-              'relative transform overflow-hidden rounded-xl border text-left shadow-modal transition-all w-full animate-scale-in',
+              'relative rounded-xl border text-left shadow-modal transition-all w-full animate-scale-in pointer-events-auto',
               maxWidth,
               className
             )
@@ -72,9 +88,11 @@ export function Modal({
               )}
             </div>
             <button
+              type="button"
               onClick={onClose}
               className="p-1.5 rounded-md transition-colors hover:bg-[var(--surface-secondary)]"
               style={{ color: 'var(--text-tertiary)' }}
+              title="Close modal"
             >
               <X className="w-4 h-4" />
             </button>
@@ -84,6 +102,9 @@ export function Modal({
           <div className="p-5">{children}</div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
+
+export default Modal;
