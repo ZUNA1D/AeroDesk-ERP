@@ -14,9 +14,8 @@ import {
   Sun,
   ArrowRight,
   CheckCircle2,
-  Lock,
   Sparkles,
-  Terminal,
+  Copy,
   Check
 } from 'lucide-react';
 import { Button } from '../components/ui/Button.jsx';
@@ -26,6 +25,13 @@ export function LandingPage() {
   const { user } = useAuth();
   const { isDark, toggleTheme } = useTheme();
   const navigate = useNavigate();
+  const [demoCopied, setDemoCopied] = React.useState(false);
+
+  const handleCopyDemo = () => {
+    navigator.clipboard.writeText('admin@aerodesk.com / admin123');
+    setDemoCopied(true);
+    setTimeout(() => setDemoCopied(false), 2000);
+  };
 
   const features = [
     {
@@ -154,57 +160,51 @@ export function LandingPage() {
             Streamline multi-passenger ticketing, BSP portal wallets, visa processing, and client receivable dues with an immutable double-entry accounting engine.
           </p>
 
-          {/* Action Buttons */}
-          <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
+          {/* Primary CTA */}
+          <div className="mt-8 flex flex-col items-center gap-4">
             <Button
               size="lg"
               icon={ArrowRight}
               onClick={() => navigate(user ? '/dashboard' : '/signup')}
-              className="w-full sm:w-auto px-6 py-2.5 text-sm font-semibold"
+              className="w-full sm:w-auto px-8 py-3 text-sm font-semibold"
             >
               {user ? 'Enter ERP Terminal' : 'Get Started Free'}
             </Button>
-            <Link
-              to="/login"
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg border text-sm font-medium transition-colors hover:bg-[var(--sidebar-hover)]"
-              style={{ borderColor: 'var(--border)', color: 'var(--text-primary)' }}
-            >
-              <Terminal className="w-4 h-4" />
-              <span>Sign In to Agency</span>
-            </Link>
+
+            {!user && (
+              <span className="text-xs" style={{ color: 'var(--text-tertiary)' }}>
+                Already have an account?{' '}
+                <Link
+                  to="/login"
+                  className="font-semibold transition-colors hover:underline"
+                  style={{ color: 'var(--accent)' }}
+                >
+                  Sign in
+                </Link>
+              </span>
+            )}
           </div>
 
-          {/* Demo Credentials Box */}
-          <div
-            className="mt-8 max-w-md mx-auto p-3.5 rounded-xl border text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-sm text-left"
-            style={{
-              backgroundColor: 'var(--surface)',
-              borderColor: 'var(--border)'
-            }}
-          >
-            <div className="flex items-center gap-2.5">
-              <div
-                className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
-                style={{ backgroundColor: 'var(--accent-muted)', color: 'var(--accent)' }}
+          {/* Subtle Demo Credentials */}
+          {!user && (
+            <div className="mt-6 flex items-center justify-center gap-2 text-[11px]" style={{ color: 'var(--text-tertiary)' }}>
+              <span>Demo:</span>
+              <code
+                className="font-mono px-2 py-0.5 rounded-md border"
+                style={{ backgroundColor: 'var(--surface-secondary)', borderColor: 'var(--border)', color: 'var(--text-secondary)' }}
               >
-                <Lock className="w-4 h-4" />
-              </div>
-              <div>
-                <span className="font-semibold block" style={{ color: 'var(--text-primary)' }}>
-                  Demo Admin Credentials
-                </span>
-                <span className="font-mono text-[11px]" style={{ color: 'var(--text-tertiary)' }}>
-                  admin@aerodesk.com • admin123
-                </span>
-              </div>
+                admin@aerodesk.com / admin123
+              </code>
+              <button
+                onClick={handleCopyDemo}
+                className="p-1 rounded-md transition-colors hover:bg-[var(--surface-secondary)]"
+                title="Copy credentials"
+                style={{ color: demoCopied ? 'var(--success)' : 'var(--text-tertiary)' }}
+              >
+                {demoCopied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+              </button>
             </div>
-            <Link
-              to="/login"
-              className="text-xs font-semibold px-3 py-1.5 rounded-lg text-white bg-brand-600 hover:bg-brand-700 text-center transition-colors"
-            >
-              Try Demo
-            </Link>
-          </div>
+          )}
         </section>
 
         {/* Feature Grid Section */}

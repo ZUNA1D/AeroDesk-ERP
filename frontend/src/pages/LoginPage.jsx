@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth.js';
-import { Plane, LogIn, Mail, Lock, Eye, EyeOff, Sparkles } from 'lucide-react';
+import { Plane, LogIn, Mail, Sparkles } from 'lucide-react';
 import { InputField } from '../components/ui/InputField.jsx';
+import { PasswordField } from '../components/ui/PasswordField.jsx';
 import { Button } from '../components/ui/Button.jsx';
+import { Alert } from '../components/ui/Alert.jsx';
 
 export function LoginPage() {
   const { login, settings, setupRequired, user, loading: authLoading } = useAuth();
@@ -12,7 +14,6 @@ export function LoginPage() {
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -78,18 +79,7 @@ export function LoginPage() {
       <div className="mt-6 sm:mx-auto sm:w-full sm:max-w-md px-1 sm:px-4 relative z-10">
         <div className="card p-6 sm:p-8">
           <form onSubmit={handleLogin} className="space-y-4">
-            {error && (
-              <div
-                className="p-3 rounded-lg text-xs font-medium border"
-                style={{
-                  backgroundColor: 'var(--danger-muted)',
-                  borderColor: 'rgba(239, 68, 68, 0.25)',
-                  color: 'var(--danger)',
-                }}
-              >
-                {error}
-              </div>
-            )}
+            {error && <Alert variant="error" message={error} onClose={() => setError('')} />}
 
             <InputField
               label="Email Address"
@@ -102,45 +92,12 @@ export function LoginPage() {
               autoFocus
             />
 
-            <div>
-              <div className="flex items-center justify-between mb-1.5">
-                <label className="block text-xs font-medium" style={{ color: 'var(--text-secondary)' }}>
-                  Password
-                </label>
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="text-[11px] font-medium flex items-center gap-1 transition-colors"
-                  style={{ color: 'var(--text-tertiary)' }}
-                >
-                  {showPassword ? (
-                    <>
-                      <EyeOff className="w-3 h-3" /> Hide
-                    </>
-                  ) : (
-                    <>
-                      <Eye className="w-3 h-3" /> Show
-                    </>
-                  )}
-                </button>
-              </div>
-              <div className="relative">
-                <div
-                  className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"
-                  style={{ color: 'var(--text-tertiary)' }}
-                >
-                  <Lock className="w-4 h-4" />
-                </div>
-                <input
-                  type={showPassword ? 'text' : 'password'}
-                  required
-                  placeholder="••••••••"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="input-base pl-10"
-                />
-              </div>
-            </div>
+            <PasswordField
+              label="Password"
+              required
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
 
             <div className="pt-2">
               <Button

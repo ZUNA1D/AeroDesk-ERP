@@ -5,6 +5,8 @@ import { AuthProvider } from './context/AuthContext.jsx';
 import { ThemeProvider } from './context/ThemeContext.jsx';
 import { router } from './router.jsx';
 
+import { Toaster } from 'sonner';
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -21,6 +23,17 @@ export function App() {
       <ThemeProvider>
         <AuthProvider>
           <RouterProvider router={router} />
+          <Toaster
+            position="top-right"
+            richColors
+            closeButton
+            toastOptions={{
+              style: {
+                borderRadius: '0.75rem',
+                fontFamily: 'inherit',
+              }
+            }}
+          />
         </AuthProvider>
       </ThemeProvider>
     </QueryClientProvider>

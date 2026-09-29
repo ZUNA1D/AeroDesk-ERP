@@ -1,7 +1,9 @@
 import axios from 'axios';
+import { toast } from 'sonner';
 
 // Resolve API base URL with safe production and development fallbacks
-export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || (import.meta.env.PROD ? '/api' : 'http://localhost:5000/api');
+export const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL || (import.meta.env.PROD ? '/api' : 'http://localhost:5000/api');
 
 export function getApiUrl(path = '') {
   const base = (API_BASE_URL || '/api').replace(/\/+$/, '');
@@ -27,11 +29,20 @@ const api = axios.create({
   }
 });
 
-// Response interceptor for automatic error messaging
+// Response interceptor for automatic error messaging and toasts
 api.interceptors.response.use(
   (response) => response,
   (error) => {
+    const status = error.response?.status;
     const message = error.response?.data?.message || error.message || 'An unknown network error occurred';
+
+    // Global handling for 500 server errors
+    if (status >= 500) {
+      toast.error('Server error: ' + message);
+    } else if (!error.response && error.code === 'ERR_NETWORK') {
+      toast.error('Network error: Unable to connect to ERP server');
+    }
+
     return Promise.reject(new Error(message));
   }
 );

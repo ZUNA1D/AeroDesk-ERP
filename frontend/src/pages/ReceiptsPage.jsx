@@ -191,3 +191,5 @@ export function ReceiptsPage() {
     </div>
   );
 }
+
+export default ReceiptsPage;

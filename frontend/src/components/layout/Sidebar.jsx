@@ -4,74 +4,19 @@ import { useAuth } from '../../hooks/useAuth.js';
 import { useSidebar } from '../../context/SidebarContext.jsx';
 import { clsx } from 'clsx';
 import {
-  Plane,
-  LayoutDashboard,
-  PlaneTakeoff,
-  Stamp,
-  Receipt,
-  BookOpen,
-  Building2,
-  FileSpreadsheet,
-  Settings,
-  Users,
-  History,
   ChevronsLeft,
   ChevronsRight,
-  Crown,
   X
 } from 'lucide-react';
+import { getNavGroups } from '../../config/navigation.js';
+import { SidebarBranding } from './SidebarBranding.jsx';
 
 export function Sidebar() {
   const { user } = useAuth();
   const { isCollapsed, toggle, isMobileOpen, closeMobile } = useSidebar();
   const location = useLocation();
-  const isAdmin = user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN';
   const isSuperAdmin = user?.role === 'SUPER_ADMIN';
-
-  const navGroups = isSuperAdmin
-    ? [
-        {
-          label: 'Platform Administration',
-          items: [
-            { to: '/agencies', label: 'Tenants & Licensing', icon: Crown },
-            { to: '/audit-log', label: 'Global Audit Trail', icon: History }
-          ]
-        }
-      ]
-    : [
-        {
-          label: 'Main',
-          items: [
-            { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-          ]
-        },
-        {
-          label: 'Transactions',
-          items: [
-            { to: '/invoice', label: 'Issue Tickets', icon: PlaneTakeoff },
-            { to: '/visa', label: 'Visa Invoice', icon: Stamp },
-            { to: '/receipts', label: 'Receipts', icon: Receipt },
-          ]
-        },
-        {
-          label: 'Finance',
-          items: [
-            { to: '/ledger', label: 'Ledger', icon: BookOpen },
-            { to: '/suppliers', label: 'Portals & Agencies', icon: Building2 },
-            { to: '/reports', label: 'Reports', icon: FileSpreadsheet },
-          ]
-        },
-        {
-          label: 'System',
-          items: [
-            { to: '/settings', label: 'Settings', icon: Settings },
-            ...(isAdmin ? [
-              { to: '/users', label: 'Users', icon: Users },
-              { to: '/audit-log', label: 'Audit Log', icon: History },
-            ] : []),
-          ]
-        },
-      ];
+  const navGroups = getNavGroups(user);
 
   const renderSidebarContent = (collapsed = false) => (
     <div className="flex flex-col h-full">
@@ -172,25 +117,7 @@ export function Sidebar() {
       >
         {/* Mobile header */}
         <div className="h-14 flex items-center justify-between px-4 border-b" style={{ borderColor: 'var(--border)' }}>
-          <div className="flex items-center gap-2.5">
-            <div
-              className={`w-8 h-8 rounded-lg flex items-center justify-center text-white shadow-sm ${
-                isSuperAdmin ? 'bg-amber-600' : 'bg-brand-600'
-              }`}
-            >
-              {isSuperAdmin ? <Crown className="w-4 h-4" /> : <Plane className="w-4 h-4 -rotate-45" />}
-            </div>
-            <div>
-              <span className="font-bold text-sm tracking-tight block leading-tight" style={{ color: 'var(--text-primary)' }}>
-                {isSuperAdmin ? 'AeroDesk Master' : 'AeroDesk'}
-              </span>
-              {isSuperAdmin && (
-                <span className="text-[10px] font-bold text-amber-600 uppercase tracking-wider block">
-                  Platform Owner
-                </span>
-              )}
-            </div>
-          </div>
+          <SidebarBranding isSuperAdmin={isSuperAdmin} />
           <button
             onClick={closeMobile}
             className="p-1.5 rounded-lg transition-colors hover:bg-[var(--sidebar-hover)]"
@@ -220,27 +147,7 @@ export function Sidebar() {
           className="h-14 flex items-center px-4 border-b flex-shrink-0"
           style={{ borderColor: 'var(--border)' }}
         >
-          <div className="flex items-center gap-2.5">
-            <div
-              className={`w-8 h-8 rounded-lg flex items-center justify-center text-white shadow-sm flex-shrink-0 ${
-                isSuperAdmin ? 'bg-amber-600' : 'bg-brand-600'
-              }`}
-            >
-              {isSuperAdmin ? <Crown className="w-4 h-4" /> : <Plane className="w-4 h-4 -rotate-45" />}
-            </div>
-            {!isCollapsed && (
-              <div className="animate-fade-in">
-                <div className="font-bold text-sm tracking-tight leading-none" style={{ color: 'var(--text-primary)' }}>
-                  {isSuperAdmin ? 'AeroDesk Master' : 'AeroDesk'}
-                </div>
-                {isSuperAdmin && (
-                  <div className="text-[10px] font-bold text-[#eab308] uppercase tracking-wider mt-0.5">
-                    Platform Owner
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
+          <SidebarBranding isSuperAdmin={isSuperAdmin} collapsed={isCollapsed} />
         </div>
         {renderSidebarContent(isCollapsed)}
       </aside>

@@ -343,3 +343,5 @@ export function InvoicePage() {
     </div>
   );
 }
+
+export default InvoicePage;

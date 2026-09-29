@@ -206,3 +206,5 @@ export function VisaPage() {
     </div>
   );
 }
+
+export default VisaPage;

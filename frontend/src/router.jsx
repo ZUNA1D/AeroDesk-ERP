@@ -1,29 +1,40 @@
-import React from 'react';
+import React, { Suspense } from 'react';
 import { createBrowserRouter, Navigate } from 'react-router-dom';
 import { useAuth } from './hooks/useAuth.js';
 import { AppShell } from './components/layout/AppShell.jsx';
 import { ProtectedRoute } from './components/layout/ProtectedRoute.jsx';
+import { PageLoader } from './components/common/PageLoader.jsx';
+import { ErrorBoundary } from './components/common/ErrorBoundary.jsx';
 
 import { LandingPage } from './pages/LandingPage.jsx';
-import { SetupPage } from './pages/SetupPage.jsx';
-import { LoginPage } from './pages/LoginPage.jsx';
-import { RegisterPage } from './pages/RegisterPage.jsx';
-import { DashboardPage } from './pages/DashboardPage.jsx';
-import { InvoicePage } from './pages/InvoicePage.jsx';
-import { VisaPage } from './pages/VisaPage.jsx';
-import { ReceiptsPage } from './pages/ReceiptsPage.jsx';
-import { LedgerPage } from './pages/LedgerPage.jsx';
-import { SuppliersPage } from './pages/SuppliersPage.jsx';
-import { ReportsPage } from './pages/ReportsPage.jsx';
-import { SettingsPage } from './pages/SettingsPage.jsx';
-import { UsersPage } from './pages/UsersPage.jsx';
-import { AuditLogPage } from './pages/AuditLogPage.jsx';
-import { AgenciesPage } from './pages/AgenciesPage.jsx';
+
+const SetupPage = React.lazy(() => import('./pages/SetupPage.jsx').then((m) => ({ default: m.default || m.SetupPage })));
+const LoginPage = React.lazy(() => import('./pages/LoginPage.jsx').then((m) => ({ default: m.default || m.LoginPage })));
+const RegisterPage = React.lazy(() => import('./pages/RegisterPage.jsx').then((m) => ({ default: m.default || m.RegisterPage })));
+const DashboardPage = React.lazy(() => import('./pages/DashboardPage.jsx').then((m) => ({ default: m.default || m.DashboardPage })));
+const InvoicePage = React.lazy(() => import('./pages/InvoicePage.jsx').then((m) => ({ default: m.default || m.InvoicePage })));
+const VisaPage = React.lazy(() => import('./pages/VisaPage.jsx').then((m) => ({ default: m.default || m.VisaPage })));
+const ReceiptsPage = React.lazy(() => import('./pages/ReceiptsPage.jsx').then((m) => ({ default: m.default || m.ReceiptsPage })));
+const LedgerPage = React.lazy(() => import('./pages/LedgerPage.jsx').then((m) => ({ default: m.default || m.LedgerPage })));
+const SuppliersPage = React.lazy(() => import('./pages/SuppliersPage.jsx').then((m) => ({ default: m.default || m.SuppliersPage })));
+const ReportsPage = React.lazy(() => import('./pages/ReportsPage.jsx').then((m) => ({ default: m.default || m.ReportsPage })));
+const SettingsPage = React.lazy(() => import('./pages/SettingsPage.jsx').then((m) => ({ default: m.default || m.SettingsPage })));
+const UsersPage = React.lazy(() => import('./pages/UsersPage.jsx').then((m) => ({ default: m.default || m.UsersPage })));
+const AuditLogPage = React.lazy(() => import('./pages/AuditLogPage.jsx').then((m) => ({ default: m.default || m.AuditLogPage })));
+const AgenciesPage = React.lazy(() => import('./pages/AgenciesPage.jsx').then((m) => ({ default: m.default || m.AgenciesPage })));
+
+function SuspenseWrapper({ children }) {
+  return (
+    <ErrorBoundary>
+      <Suspense fallback={<PageLoader />}>{children}</Suspense>
+    </ErrorBoundary>
+  );
+}
 
 function HomeRoute() {
   const { user, loading, setupRequired } = useAuth();
   if (loading) {
-    return null;
+    return <PageLoader />;
   }
   if (setupRequired) {
     return <Navigate to="/setup" replace />;
@@ -43,28 +54,32 @@ export const router = createBrowserRouter([
     element: <HomeRoute />
   },
   {
-    path: '/welcome',
-    element: <LandingPage />
-  },
-  {
-    path: '/landing',
-    element: <LandingPage />
-  },
-  {
     path: '/signup',
-    element: <RegisterPage />
+    element: (
+      <SuspenseWrapper>
+        <RegisterPage />
+      </SuspenseWrapper>
+    )
   },
   {
     path: '/register',
-    element: <RegisterPage />
+    element: <Navigate to="/signup" replace />
   },
   {
     path: '/setup',
-    element: <SetupPage />
+    element: (
+      <SuspenseWrapper>
+        <SetupPage />
+      </SuspenseWrapper>
+    )
   },
   {
     path: '/login',
-    element: <LoginPage />
+    element: (
+      <SuspenseWrapper>
+        <LoginPage />
+      </SuspenseWrapper>
+    )
   },
   {
     element: (
@@ -168,3 +183,5 @@ export const router = createBrowserRouter([
     element: <Navigate to="/" replace />
   }
 ]);
+
+export default router;

@@ -45,19 +45,9 @@ export function StatCard({
       chipText: 'var(--warning)',
       accentBorder: 'var(--warning)',
     },
-    // Keep backward compat with old variant names
-    sky: undefined,
-    emerald: undefined,
-    rose: undefined,
   };
 
-  // Map old variant names to new
-  const mappedVariant = variant === 'sky' ? 'blue'
-    : variant === 'emerald' ? 'green'
-    : variant === 'rose' ? 'red'
-    : variant;
-
-  const config = variantConfig[mappedVariant] || variantConfig.blue;
+  const config = variantConfig[variant] || variantConfig.blue;
 
   return (
     <div

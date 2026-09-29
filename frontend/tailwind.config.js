@@ -20,11 +20,48 @@ export default {
           800: '#1e40af',
           900: '#1e3a8a',
           950: '#172554',
+          muted: 'var(--brand-muted)',
         },
         surface: {
           DEFAULT: 'var(--surface)',
           secondary: 'var(--surface-secondary)',
           elevated: 'var(--surface-elevated)',
+        },
+        accent: {
+          DEFAULT: 'var(--accent)',
+          hover: 'var(--accent-hover)',
+          muted: 'var(--accent-muted)',
+        },
+        success: {
+          DEFAULT: 'var(--success)',
+          muted: 'var(--success-muted)',
+        },
+        danger: {
+          DEFAULT: 'var(--danger)',
+          muted: 'var(--danger-muted)',
+        },
+        warning: {
+          DEFAULT: 'var(--warning)',
+          muted: 'var(--warning-muted)',
+        },
+        info: {
+          DEFAULT: 'var(--info)',
+          muted: 'var(--info-muted)',
+        },
+        'super-admin': {
+          DEFAULT: 'var(--super-admin)',
+          muted: 'var(--super-admin-muted)',
+          border: 'var(--super-admin-border)',
+        },
+        'theme-text': {
+          primary: 'var(--text-primary)',
+          secondary: 'var(--text-secondary)',
+          tertiary: 'var(--text-tertiary)',
+          inverse: 'var(--text-inverse)',
+        },
+        'theme-border': {
+          DEFAULT: 'var(--border)',
+          secondary: 'var(--border-secondary)',
         }
       },
       fontFamily: {

@@ -22,12 +22,14 @@ import { StatCard } from '../components/ui/StatCard.jsx';
 import { Badge } from '../components/ui/Badge.jsx';
 import { Button } from '../components/ui/Button.jsx';
 import { Modal } from '../components/ui/Modal.jsx';
+import { ConfirmDialog } from '../components/ui/ConfirmDialog.jsx';
 import { InputField } from '../components/ui/InputField.jsx';
 import { SelectField } from '../components/ui/SelectField.jsx';
 
 export function AgenciesPage() {
   const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState('');
+  const [killswitchConfirm, setKillswitchConfirm] = useState({ isOpen: false, agency: null });
   const [statusFilter, setStatusFilter] = useState('ALL');
   const [editingAgency, setEditingAgency] = useState(null);
   const [editForm, setEditForm] = useState({
@@ -102,19 +104,18 @@ export function AgenciesPage() {
   };
 
   const handleToggleKillswitch = (agency) => {
-    const newStatus = agency.status === 'SUSPENDED' ? 'ACTIVE' : 'SUSPENDED';
-    const actionVerb = newStatus === 'SUSPENDED' ? 'SUSPEND' : 'REACTIVATE';
-    const confirmPrompt = window.confirm(
-      `Are you sure you want to ${actionVerb} agency workspace "${agency.name}" (${agency.slug})?\n\n` +
-      (newStatus === 'SUSPENDED'
-        ? 'All staff and administrators of this agency will be instantly locked out!'
-        : 'Access will be immediately restored.')
-    );
-    if (!confirmPrompt) return;
+    setKillswitchConfirm({ isOpen: true, agency });
+  };
 
+  const handleConfirmKillswitch = () => {
+    const agency = killswitchConfirm.agency;
+    if (!agency) return;
+    const newStatus = agency.status === 'SUSPENDED' ? 'ACTIVE' : 'SUSPENDED';
     updateMutation.mutate({
       id: agency._id,
       payload: { status: newStatus }
+    }, {
+      onSettled: () => setKillswitchConfirm({ isOpen: false, agency: null })
     });
   };
 
@@ -125,8 +126,8 @@ export function AgenciesPage() {
         <div>
           <div className="flex items-center gap-2">
             <span
-              className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold uppercase tracking-wider"
-              style={{ backgroundColor: 'rgba(234, 179, 8, 0.15)', color: '#eab308' }}
+              className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold uppercase tracking-wider border"
+              style={{ backgroundColor: 'var(--super-admin-muted)', color: 'var(--super-admin)', borderColor: 'var(--super-admin-border)' }}
             >
               <Crown className="w-3.5 h-3.5" />
               Platform Owner Control
@@ -516,6 +517,26 @@ export function AgenciesPage() {
           </div>
         </form>
       </Modal>
+
+      {/* Killswitch Confirm Dialog */}
+      <ConfirmDialog
+        isOpen={killswitchConfirm.isOpen}
+        onClose={() => setKillswitchConfirm({ isOpen: false, agency: null })}
+        onConfirm={handleConfirmKillswitch}
+        loading={updateMutation.isPending}
+        title={
+          killswitchConfirm.agency?.status === 'SUSPENDED'
+            ? `Reactivate ${killswitchConfirm.agency?.name}?`
+            : `Suspend ${killswitchConfirm.agency?.name}?`
+        }
+        message={
+          killswitchConfirm.agency?.status === 'SUSPENDED'
+            ? `Access for all staff and administrators of "${killswitchConfirm.agency?.name}" (${killswitchConfirm.agency?.slug}) will be immediately restored.`
+            : `Are you sure you want to suspend "${killswitchConfirm.agency?.name}" (${killswitchConfirm.agency?.slug})? All staff and administrators of this agency will be instantly locked out!`
+        }
+        confirmText={killswitchConfirm.agency?.status === 'SUSPENDED' ? 'Reactivate Agency' : 'Suspend Agency'}
+        variant={killswitchConfirm.agency?.status === 'SUSPENDED' ? 'primary' : 'danger'}
+      />
     </div>
   );
 }

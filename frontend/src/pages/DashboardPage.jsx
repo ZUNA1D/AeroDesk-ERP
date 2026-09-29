@@ -105,7 +105,7 @@ export function DashboardPage() {
           title="Total Client Due"
           value={summary.totalClientDue}
           icon={Users}
-          variant="rose"
+          variant="red"
           subtitle="Receivable from clients"
           changeText="Pending Due"
           onClick={() => navigate('/ledger?type=TICKET_INVOICE,VISA_INVOICE')}
@@ -114,7 +114,7 @@ export function DashboardPage() {
           title="Portal Wallet Balance"
           value={summary.portalWalletTotal}
           icon={Wallet}
-          variant="sky"
+          variant="blue"
           subtitle="Prepaid BSP/GDS Wallets"
           changeText="Active Funds"
           onClick={() => navigate('/suppliers?type=PORTAL')}
@@ -132,7 +132,7 @@ export function DashboardPage() {
           title="All-Time Net Profit"
           value={summary.allTimeProfit}
           icon={TrendingUp}
-          variant="emerald"
+          variant="green"
           subtitle={`Today: BDT ${formatMoney(summary.todayProfit)}`}
           changeText="Net Margin"
           onClick={() => navigate('/reports')}
@@ -342,3 +342,5 @@ export function DashboardPage() {
     </div>
   );
 }
+
+export default DashboardPage;
