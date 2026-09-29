@@ -17,7 +17,8 @@ import {
   History,
   ChevronsLeft,
   ChevronsRight,
-  Crown
+  Crown,
+  X
 } from 'lucide-react';
 
 export function Sidebar() {
@@ -72,13 +73,13 @@ export function Sidebar() {
         },
       ];
 
-  const sidebarContent = (
+  const renderSidebarContent = (collapsed = false) => (
     <div className="flex flex-col h-full">
       {/* Nav Items */}
       <nav className="flex-1 px-3 py-4 space-y-6 overflow-y-auto no-scrollbar">
         {navGroups.map((group) => (
           <div key={group.label}>
-            {!isCollapsed && (
+            {!collapsed && (
               <div className="px-3 mb-2 text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--text-tertiary)' }}>
                 {group.label}
               </div>
@@ -103,7 +104,7 @@ export function Sidebar() {
                       backgroundColor: isActive ? 'var(--sidebar-active)' : undefined,
                       color: isActive ? 'var(--sidebar-active-text)' : 'var(--text-secondary)',
                     }}
-                    title={isCollapsed ? item.label : undefined}
+                    title={collapsed ? item.label : undefined}
                   >
                     {/* Active indicator */}
                     {isActive && (
@@ -114,9 +115,9 @@ export function Sidebar() {
                     )}
                     <Icon className={clsx(
                       'flex-shrink-0 transition-colors',
-                      isCollapsed ? 'w-5 h-5' : 'w-4 h-4'
+                      collapsed ? 'w-5 h-5' : 'w-4 h-4'
                     )} />
-                    {!isCollapsed && (
+                    {!collapsed && (
                       <span className="truncate">{item.label}</span>
                     )}
                   </NavLink>
@@ -136,9 +137,9 @@ export function Sidebar() {
           onClick={toggle}
           className="p-2 rounded-lg transition-colors hover:bg-[var(--sidebar-hover)]"
           style={{ color: 'var(--text-tertiary)' }}
-          title={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+          title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
         >
-          {isCollapsed ? (
+          {collapsed ? (
             <ChevronsRight className="w-4 h-4" />
           ) : (
             <ChevronsLeft className="w-4 h-4" />
@@ -170,7 +171,7 @@ export function Sidebar() {
         }}
       >
         {/* Mobile header */}
-        <div className="h-14 flex items-center px-4 border-b" style={{ borderColor: 'var(--border)' }}>
+        <div className="h-14 flex items-center justify-between px-4 border-b" style={{ borderColor: 'var(--border)' }}>
           <div className="flex items-center gap-2.5">
             <div
               className={`w-8 h-8 rounded-lg flex items-center justify-center text-white shadow-sm ${
@@ -190,8 +191,16 @@ export function Sidebar() {
               )}
             </div>
           </div>
+          <button
+            onClick={closeMobile}
+            className="p-1.5 rounded-lg transition-colors hover:bg-[var(--sidebar-hover)]"
+            style={{ color: 'var(--text-tertiary)' }}
+            title="Close menu"
+          >
+            <X className="w-5 h-5" />
+          </button>
         </div>
-        {sidebarContent}
+        {renderSidebarContent(false)}
       </aside>
 
       {/* Desktop sidebar */}
@@ -233,7 +242,7 @@ export function Sidebar() {
             )}
           </div>
         </div>
-        {sidebarContent}
+        {renderSidebarContent(isCollapsed)}
       </aside>
     </>
   );

@@ -6,9 +6,7 @@ export function SidebarProvider({ children }) {
   const [isCollapsed, setIsCollapsed] = useState(() => {
     if (typeof window !== 'undefined') {
       const stored = localStorage.getItem('sal-sidebar-collapsed');
-      if (stored === 'true') return true;
-      // Auto-collapse on mobile
-      return window.innerWidth < 1024;
+      if (stored !== null) return stored === 'true';
     }
     return false;
   });
