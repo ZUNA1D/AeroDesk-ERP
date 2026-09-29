@@ -203,21 +203,22 @@
     font-weight: 600;
   }
 
-  /* ─── Gradient primary button ─── */
-  .gradient-primary-btn {
-    @apply bg-brand-600 text-white font-semibold;
+  /* ─── Clean primary button ─── */
+  .gradient-primary-btn,
+  .primary-btn {
+    @apply bg-brand-600 text-white font-medium;
     @apply hover:bg-brand-700;
     @apply shadow-sm active:scale-[0.98] transition-all;
   }
-  .dark .gradient-primary-btn {
-    @apply bg-brand-500 hover:bg-brand-400 text-white;
+  .dark .gradient-primary-btn,
+  .dark .primary-btn {
+    @apply bg-brand-600 hover:bg-brand-500 text-white;
   }
 
   /* ─── Skeleton loader ─── */
   .skeleton {
-    @apply rounded-lg animate-shimmer;
-    background: linear-gradient(90deg, var(--surface-secondary) 25%, var(--surface) 50%, var(--surface-secondary) 75%);
-    background-size: 200% 100%;
+    @apply rounded-lg animate-pulse;
+    background-color: var(--surface-secondary);
   }
 }
 

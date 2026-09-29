@@ -16,7 +16,7 @@ export function Button({
   const baseStyles = 'inline-flex items-center justify-center font-medium rounded-lg transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-none active:scale-[0.98]';
 
   const variants = {
-    primary: 'gradient-primary-btn focus-visible:ring-brand-400',
+    primary: 'primary-btn focus-visible:ring-brand-400',
     secondary: 'border shadow-sm hover:shadow focus-visible:ring-brand-400',
     accent: 'bg-brand-500 text-white hover:bg-brand-600 shadow-sm focus-visible:ring-brand-400',
     success: 'text-white shadow-sm focus-visible:ring-emerald-400',

@@ -173,12 +173,9 @@ export function Sidebar() {
         <div className="h-14 flex items-center px-4 border-b" style={{ borderColor: 'var(--border)' }}>
           <div className="flex items-center gap-2.5">
             <div
-              className="w-8 h-8 rounded-lg flex items-center justify-center text-white shadow-sm"
-              style={{
-                background: isSuperAdmin
-                  ? 'linear-gradient(135deg, #eab308, #a855f7)'
-                  : 'linear-gradient(135deg, #3b82f6, #10b981)'
-              }}
+              className={`w-8 h-8 rounded-lg flex items-center justify-center text-white shadow-sm ${
+                isSuperAdmin ? 'bg-amber-600' : 'bg-brand-600'
+              }`}
             >
               {isSuperAdmin ? <Crown className="w-4 h-4" /> : <Plane className="w-4 h-4 -rotate-45" />}
             </div>
@@ -187,7 +184,7 @@ export function Sidebar() {
                 {isSuperAdmin ? 'AeroDesk Master' : 'AeroDesk'}
               </span>
               {isSuperAdmin && (
-                <span className="text-[10px] font-bold text-[#eab308] uppercase tracking-wider block">
+                <span className="text-[10px] font-bold text-amber-600 uppercase tracking-wider block">
                   Platform Owner
                 </span>
               )}
@@ -216,12 +213,9 @@ export function Sidebar() {
         >
           <div className="flex items-center gap-2.5">
             <div
-              className="w-8 h-8 rounded-lg flex items-center justify-center text-white shadow-sm flex-shrink-0"
-              style={{
-                background: isSuperAdmin
-                  ? 'linear-gradient(135deg, #eab308, #a855f7)'
-                  : 'linear-gradient(135deg, #3b82f6, #10b981)'
-              }}
+              className={`w-8 h-8 rounded-lg flex items-center justify-center text-white shadow-sm flex-shrink-0 ${
+                isSuperAdmin ? 'bg-amber-600' : 'bg-brand-600'
+              }`}
             >
               {isSuperAdmin ? <Crown className="w-4 h-4" /> : <Plane className="w-4 h-4 -rotate-45" />}
             </div>

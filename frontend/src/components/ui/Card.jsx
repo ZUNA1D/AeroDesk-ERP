@@ -16,7 +16,7 @@ export function Card({ children, className, title, subtitle, action, footer, hov
     >
       {(title || subtitle || action) && (
         <div
-          className="px-5 py-3.5 border-b flex items-center justify-between gap-4"
+          className="px-4 sm:px-5 py-3.5 border-b flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-4"
           style={{ borderColor: 'var(--border)' }}
         >
           <div>

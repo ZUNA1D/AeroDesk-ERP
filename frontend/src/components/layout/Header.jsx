@@ -38,8 +38,7 @@ export function Header() {
             {user?.role === 'SUPER_ADMIN' ? (
               <div className="flex items-center gap-2">
                 <div
-                  className="w-8 h-8 rounded-lg flex items-center justify-center text-white shadow-sm flex-shrink-0"
-                  style={{ background: 'linear-gradient(135deg, #eab308, #a855f7)' }}
+                  className="w-8 h-8 rounded-lg flex items-center justify-center text-white bg-amber-600 shadow-sm flex-shrink-0"
                 >
                   <Crown className="w-4 h-4" />
                 </div>
@@ -47,7 +46,7 @@ export function Header() {
                   <h1 className="text-sm font-bold tracking-tight" style={{ color: 'var(--text-primary)' }}>
                     AeroDesk Master
                   </h1>
-                  <p className="text-[11px] font-semibold text-[#eab308]">
+                  <p className="text-[11px] font-semibold text-amber-600">
                     Platform Control Console
                   </p>
                 </div>
@@ -97,28 +96,28 @@ export function Header() {
               style={{
                 backgroundColor: 'rgba(234, 179, 8, 0.12)',
                 borderColor: 'rgba(234, 179, 8, 0.35)',
-                color: '#eab308'
+                color: '#d97706'
               }}
               title="Go to Platform Tenants & Licensing Console"
             >
               <Crown className="w-3.5 h-3.5" />
-              <span>Tenants Console</span>
+              <span className="hidden sm:inline">Tenants Console</span>
             </Link>
           )}
 
           {/* User profile */}
           {user && (
             <div
-              className="flex items-center gap-2.5 px-3 py-1.5 rounded-lg"
-              style={{ backgroundColor: 'var(--surface-secondary)' }}
+              className="flex items-center gap-2.5 px-2.5 sm:px-3 py-1.5 rounded-lg border"
+              style={{ backgroundColor: 'var(--surface-secondary)', borderColor: 'var(--border)' }}
             >
               <div
                 className="w-7 h-7 rounded-full flex items-center justify-center text-white font-bold text-xs"
                 style={{
-                  background:
+                  backgroundColor:
                     user.role === 'SUPER_ADMIN'
-                      ? 'linear-gradient(135deg, #eab308, #a855f7)'
-                      : 'linear-gradient(135deg, #3b82f6, #8b5cf6)'
+                      ? '#d97706'
+                      : '#2563eb'
                 }}
               >
                 {user.role === 'SUPER_ADMIN' ? '👑' : user.name.charAt(0).toUpperCase()}
@@ -129,7 +128,7 @@ export function Header() {
                 </div>
                 <div className="text-[10px] mt-0.5" style={{ color: 'var(--text-tertiary)' }}>
                   {user.role === 'SUPER_ADMIN' ? (
-                    <span className="font-bold text-[#eab308]">SUPER ADMIN</span>
+                    <span className="font-bold text-amber-600">SUPER ADMIN</span>
                   ) : (
                     user.role
                   )}

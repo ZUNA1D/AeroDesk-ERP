@@ -123,9 +123,19 @@ export function ReceiptsPage() {
                   {clients.map((c) => <option key={c._id} value={c._id}>{c.name} {c.phone ? `(${c.phone})` : ''} - Due: BDT {formatMoney(c.currentDue)}</option>)}
                 </select>
                 {selectedClient && (
-                  <div className="mt-1.5 text-xs flex items-center justify-between" style={{ color: 'var(--text-tertiary)' }}>
-                    <span>Outstanding Due Before Payment:</span>
-                    <span className="font-bold font-mono" style={{ color: 'var(--danger)' }}>BDT {formatMoney(selectedClient.currentDue)}</span>
+                  <div className="mt-2 p-2.5 rounded-lg border text-xs space-y-1" style={{ backgroundColor: 'var(--surface-secondary)', borderColor: 'var(--border)' }}>
+                    <div className="flex justify-between items-center">
+                      <span className="font-semibold" style={{ color: 'var(--text-primary)' }}>{selectedClient.name}</span>
+                      <span className="font-mono font-bold text-rose-600">Current Due: BDT {formatMoney(selectedClient.currentDue)}</span>
+                    </div>
+                    {numAmount > 0 && (
+                      <div className="flex justify-between items-center text-[11px] pt-1 border-t" style={{ borderColor: 'var(--border)', color: 'var(--text-tertiary)' }}>
+                        <span>Remaining Due After Payment:</span>
+                        <span className="font-mono font-bold text-emerald-600">
+                          BDT {formatMoney(Math.max(0, selectedClient.currentDue - numAmount))}
+                        </span>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>

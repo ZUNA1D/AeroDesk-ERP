@@ -124,9 +124,14 @@ export function VisaPage() {
                 {clients.map((c) => <option key={c._id} value={c._id}>{c.name} {c.phone ? `(${c.phone})` : ''} - Due: BDT {formatMoney(c.currentDue)}</option>)}
               </select>
               {selectedClient && (
-                <div className="mt-1.5 text-xs flex items-center gap-2" style={{ color: 'var(--text-tertiary)' }}>
-                  <span>Current Due:</span>
-                  <span className="font-bold font-mono" style={{ color: 'var(--danger)' }}>BDT {formatMoney(selectedClient.currentDue)}</span>
+                <div className="mt-2 p-2.5 rounded-lg border text-xs space-y-1" style={{ backgroundColor: 'var(--surface-secondary)', borderColor: 'var(--border)' }}>
+                  <div className="flex justify-between items-center">
+                    <span className="font-semibold" style={{ color: 'var(--text-primary)' }}>{selectedClient.name}</span>
+                    <span className="font-mono font-bold text-rose-600">Due: BDT {formatMoney(selectedClient.currentDue)}</span>
+                  </div>
+                  {selectedClient.phone && (
+                    <div className="text-[11px]" style={{ color: 'var(--text-tertiary)' }}>Phone: {selectedClient.phone}</div>
+                  )}
                 </div>
               )}
             </div>
@@ -138,9 +143,17 @@ export function VisaPage() {
                 {suppliers.map((s) => <option key={s._id} value={s._id}>{s.name} [{s.type}] {s.isSelf ? '(Own Stock)' : `- Balance: BDT ${formatMoney(s.balance)}`}</option>)}
               </select>
               {selectedSupplier && (
-                <div className="mt-1.5 text-xs flex items-center gap-2" style={{ color: 'var(--text-tertiary)' }}>
-                  <Badge variant={selectedSupplier.isSelf ? 'direct' : selectedSupplier.type === 'PORTAL' ? 'portal' : 'agency'} size="xs">{selectedSupplier.type}</Badge>
-                  {!selectedSupplier.isSelf && <span>Balance: <strong className="font-mono" style={{ color: 'var(--text-primary)' }}>BDT {formatMoney(selectedSupplier.balance)}</strong></span>}
+                <div className="mt-2 p-2.5 rounded-lg border text-xs space-y-1" style={{ backgroundColor: 'var(--surface-secondary)', borderColor: 'var(--border)' }}>
+                  <div className="flex justify-between items-center">
+                    <span className="font-semibold" style={{ color: 'var(--text-primary)' }}>{selectedSupplier.name}</span>
+                    <Badge variant={selectedSupplier.isSelf ? 'direct' : selectedSupplier.type === 'PORTAL' ? 'portal' : 'agency'} size="xs">{selectedSupplier.type}</Badge>
+                  </div>
+                  {!selectedSupplier.isSelf && (
+                    <div className="text-[11px] flex justify-between" style={{ color: 'var(--text-tertiary)' }}>
+                      <span>Balance:</span>
+                      <strong className="font-mono" style={{ color: 'var(--text-primary)' }}>BDT {formatMoney(selectedSupplier.balance)}</strong>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -167,7 +180,13 @@ export function VisaPage() {
                 </div>
                 <div className="flex justify-between" style={{ color: 'var(--text-secondary)' }}>
                   <span>Total Selling Price:</span>
-                  <span className="font-mono font-bold text-base" style={{ color: 'var(--success)' }}>BDT {formatMoney(totalSell)}</span>
+                  <span className="font-mono font-bold text-base text-emerald-600">BDT {formatMoney(totalSell)}</span>
+                </div>
+                <div className="flex justify-between text-xs" style={{ color: 'var(--text-tertiary)' }}>
+                  <span>Estimated Profit Margin:</span>
+                  <span className="font-semibold text-emerald-600">
+                    {totalSell > 0 ? ((totalProfit / totalSell) * 100).toFixed(1) : 0}%
+                  </span>
                 </div>
                 <div className="pt-2 flex justify-between font-bold text-sm border-t" style={{ borderColor: 'var(--border)' }}>
                   <span style={{ color: 'var(--text-primary)' }}>Expected Profit:</span>

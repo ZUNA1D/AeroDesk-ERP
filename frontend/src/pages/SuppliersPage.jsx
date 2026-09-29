@@ -191,7 +191,7 @@ export function SuppliersPage() {
           className="card p-4 flex items-center justify-between gap-3 border"
           style={{
             borderColor: 'rgba(59, 130, 246, 0.25)',
-            background: 'linear-gradient(to right, var(--surface), var(--surface-secondary))'
+            backgroundColor: 'var(--surface)'
           }}
         >
           <div className="flex items-center gap-3">

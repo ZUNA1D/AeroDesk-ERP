@@ -11,8 +11,10 @@ import {
   Plane,
   ArrowRight,
   ShieldCheck,
-  Sparkles,
-  CheckCircle2
+  CheckCircle2,
+  Eye,
+  EyeOff,
+  Coins
 } from 'lucide-react';
 import { InputField } from '../components/ui/InputField.jsx';
 import { Button } from '../components/ui/Button.jsx';
@@ -32,6 +34,8 @@ export function RegisterPage() {
     currency: 'BDT'
   });
 
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -55,6 +59,9 @@ export function RegisterPage() {
         .replace(/-+/g, '-')
         .replace(/^-|-$/g, '') || 'your-agency'
     : 'your-agency';
+
+  const isPasswordValid = formData.password.length >= 6;
+  const doPasswordsMatch = formData.password && formData.password === formData.confirmPassword;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -99,49 +106,36 @@ export function RegisterPage() {
 
   return (
     <div
-      className="min-h-screen flex flex-col justify-center py-10 px-4 sm:px-6 lg:px-8 relative overflow-hidden"
+      className="min-h-screen flex flex-col justify-center py-10 px-4 sm:px-6 lg:px-8 relative"
       style={{ backgroundColor: 'var(--bg)' }}
     >
-      {/* Background glow accents */}
-      <div
-        className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full blur-[140px] pointer-events-none opacity-20"
-        style={{ background: 'radial-gradient(circle, var(--accent), transparent 70%)' }}
-      />
-      <div
-        className="absolute bottom-1/4 right-1/4 w-[450px] h-[450px] rounded-full blur-[130px] pointer-events-none opacity-20"
-        style={{ background: 'radial-gradient(circle, #10b981, transparent 70%)' }}
-      />
-
       {/* Header */}
       <div className="sm:mx-auto sm:w-full sm:max-w-xl text-center relative z-10 mb-6">
-        <div
-          className="inline-flex items-center justify-center w-14 h-14 rounded-2xl text-white shadow-xl mb-4"
-          style={{ background: 'linear-gradient(135deg, #3b82f6, #10b981)' }}
-        >
-          <Plane className="w-7 h-7 -rotate-45" />
+        <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl text-white bg-brand-600 shadow-sm mb-3">
+          <Plane className="w-6 h-6 -rotate-45" />
         </div>
         <h1
-          className="text-2xl sm:text-3xl font-extrabold tracking-tight"
+          className="text-2xl sm:text-3xl font-bold tracking-tight"
           style={{ color: 'var(--text-primary)' }}
         >
           Create Agency Workspace
         </h1>
-        <p className="mt-1.5 text-xs sm:text-sm max-w-md mx-auto" style={{ color: 'var(--text-secondary)' }}>
-          Start your dedicated, isolated AeroDesk ERP instance with isolated ledgers, ticket billing, and multi-tenant security.
+        <p className="mt-1 text-xs sm:text-sm max-w-md mx-auto" style={{ color: 'var(--text-secondary)' }}>
+          Launch an isolated AeroDesk ERP instance with dedicated ledger, ticket billing, and multi-tenant security.
         </p>
       </div>
 
       {/* Form Container */}
-      <div className="sm:mx-auto sm:w-full sm:max-w-xl px-2 relative z-10">
-        <div className="card p-6 sm:p-8 shadow-xl">
+      <div className="sm:mx-auto sm:w-full sm:max-w-xl px-1 sm:px-4 relative z-10">
+        <div className="card p-5 sm:p-8">
           <form onSubmit={handleSubmit} className="space-y-6">
             {error && (
               <div
-                className="p-3.5 rounded-lg text-xs font-medium flex items-start gap-2.5 animate-in fade-in duration-200"
+                className="p-3 rounded-lg text-xs font-medium border"
                 style={{
                   backgroundColor: 'var(--danger-muted)',
-                  color: 'var(--danger)',
-                  border: '1px solid rgba(239, 68, 68, 0.25)'
+                  borderColor: 'rgba(239, 68, 68, 0.25)',
+                  color: 'var(--danger)'
                 }}
               >
                 <span>{error}</span>
@@ -149,13 +143,13 @@ export function RegisterPage() {
             )}
 
             {/* Section 1: Agency Profile */}
-            <div>
-              <div className="flex items-center justify-between pb-2 mb-3 border-b" style={{ borderColor: 'var(--border)' }}>
+            <div className="space-y-3.5">
+              <div className="flex items-center justify-between pb-2 border-b" style={{ borderColor: 'var(--border)' }}>
                 <span className="text-xs font-semibold uppercase tracking-wider flex items-center gap-1.5" style={{ color: 'var(--accent)' }}>
                   <Building2 className="w-4 h-4" />
                   1. Agency Workspace Details
                 </span>
-                <span className="text-[11px] font-mono px-2 py-0.5 rounded-full" style={{ backgroundColor: 'var(--accent-muted)', color: 'var(--accent)' }}>
+                <span className="text-[11px] font-mono px-2 py-0.5 rounded-md border" style={{ backgroundColor: 'var(--surface-secondary)', borderColor: 'var(--border)', color: 'var(--accent)' }}>
                   {slugPreview}.aerodesk.app
                 </span>
               </div>
@@ -169,36 +163,64 @@ export function RegisterPage() {
                     required
                     value={formData.agencyName}
                     onChange={(e) => handleChange('agencyName', e.target.value)}
+                    autoFocus
                   />
                 </div>
 
                 <InputField
-                  label="Official Phone / Hotline"
+                  label="Official Hotline / Phone"
                   icon={Phone}
                   placeholder="+880 1711 000000"
                   value={formData.phone}
                   onChange={(e) => handleChange('phone', e.target.value)}
                 />
 
-                <InputField
-                  label="Office Address"
-                  icon={MapPin}
-                  placeholder="e.g. Banani, Dhaka"
-                  value={formData.address}
-                  onChange={(e) => handleChange('address', e.target.value)}
-                />
+                <div>
+                  <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>
+                    Primary Currency
+                  </label>
+                  <div className="relative">
+                    <div
+                      className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"
+                      style={{ color: 'var(--text-tertiary)' }}
+                    >
+                      <Coins className="w-4 h-4" />
+                    </div>
+                    <select
+                      value={formData.currency}
+                      onChange={(e) => handleChange('currency', e.target.value)}
+                      className="input-base pl-10 cursor-pointer text-sm"
+                    >
+                      <option value="BDT">BDT (Bangladeshi Taka)</option>
+                      <option value="USD">USD (US Dollar)</option>
+                      <option value="EUR">EUR (Euro)</option>
+                      <option value="AED">AED (UAE Dirham)</option>
+                      <option value="SAR">SAR (Saudi Riyal)</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="sm:col-span-2">
+                  <InputField
+                    label="Office Address"
+                    icon={MapPin}
+                    placeholder="e.g. Suite 402, Banani C/A, Dhaka"
+                    value={formData.address}
+                    onChange={(e) => handleChange('address', e.target.value)}
+                  />
+                </div>
               </div>
             </div>
 
             {/* Section 2: Primary Administrator Account */}
-            <div>
-              <div className="flex items-center justify-between pb-2 mb-3 border-b" style={{ borderColor: 'var(--border)' }}>
+            <div className="space-y-3.5">
+              <div className="flex items-center justify-between pb-2 border-b" style={{ borderColor: 'var(--border)' }}>
                 <span className="text-xs font-semibold uppercase tracking-wider flex items-center gap-1.5" style={{ color: 'var(--accent)' }}>
                   <ShieldCheck className="w-4 h-4" />
-                  2. Agency Administrator Account
+                  2. Administrator Account
                 </span>
                 <span className="text-[11px]" style={{ color: 'var(--text-tertiary)' }}>
-                  Primary Root Admin
+                  Root Admin
                 </span>
               </div>
 
@@ -227,40 +249,102 @@ export function RegisterPage() {
                   />
                 </div>
 
-                <InputField
-                  label="Password *"
-                  icon={Lock}
-                  type="password"
-                  placeholder="••••••••"
-                  required
-                  value={formData.password}
-                  onChange={(e) => handleChange('password', e.target.value)}
-                />
+                {/* Password field with toggle */}
+                <div>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label className="block text-xs font-medium" style={{ color: 'var(--text-secondary)' }}>
+                      Password *
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="text-[11px] font-medium flex items-center gap-1 transition-colors"
+                      style={{ color: 'var(--text-tertiary)' }}
+                    >
+                      {showPassword ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
+                      <span>{showPassword ? 'Hide' : 'Show'}</span>
+                    </button>
+                  </div>
+                  <div className="relative">
+                    <div
+                      className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"
+                      style={{ color: 'var(--text-tertiary)' }}
+                    >
+                      <Lock className="w-4 h-4" />
+                    </div>
+                    <input
+                      type={showPassword ? 'text' : 'password'}
+                      required
+                      placeholder="••••••••"
+                      value={formData.password}
+                      onChange={(e) => handleChange('password', e.target.value)}
+                      className="input-base pl-10"
+                    />
+                  </div>
+                </div>
 
-                <InputField
-                  label="Confirm Password *"
-                  icon={Lock}
-                  type="password"
-                  placeholder="••••••••"
-                  required
-                  value={formData.confirmPassword}
-                  onChange={(e) => handleChange('confirmPassword', e.target.value)}
-                />
+                {/* Confirm Password field with toggle */}
+                <div>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label className="block text-xs font-medium" style={{ color: 'var(--text-secondary)' }}>
+                      Confirm Password *
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      className="text-[11px] font-medium flex items-center gap-1 transition-colors"
+                      style={{ color: 'var(--text-tertiary)' }}
+                    >
+                      {showConfirmPassword ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
+                      <span>{showConfirmPassword ? 'Hide' : 'Show'}</span>
+                    </button>
+                  </div>
+                  <div className="relative">
+                    <div
+                      className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"
+                      style={{ color: 'var(--text-tertiary)' }}
+                    >
+                      <Lock className="w-4 h-4" />
+                    </div>
+                    <input
+                      type={showConfirmPassword ? 'text' : 'password'}
+                      required
+                      placeholder="••••••••"
+                      value={formData.confirmPassword}
+                      onChange={(e) => handleChange('confirmPassword', e.target.value)}
+                      className="input-base pl-10"
+                    />
+                  </div>
+                </div>
               </div>
+
+              {/* Password Helper Checklist */}
+              {formData.password && (
+                <div className="flex flex-wrap items-center gap-3 pt-1 text-[11px]">
+                  <span className={`flex items-center gap-1 font-medium ${isPasswordValid ? 'text-emerald-600' : 'text-slate-400'}`}>
+                    <CheckCircle2 className="w-3.5 h-3.5" /> At least 6 characters
+                  </span>
+                  {formData.confirmPassword && (
+                    <span className={`flex items-center gap-1 font-medium ${doPasswordsMatch ? 'text-emerald-600' : 'text-rose-500'}`}>
+                      <CheckCircle2 className="w-3.5 h-3.5" /> Passwords match
+                    </span>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Trust points */}
-            <div className="p-3 rounded-lg text-xs flex items-center gap-4" style={{ backgroundColor: 'var(--hover)' }}>
+            <div className="p-3 rounded-lg text-xs flex flex-wrap items-center gap-4 border" style={{ backgroundColor: 'var(--surface-secondary)', borderColor: 'var(--border)' }}>
               <div className="flex items-center gap-1.5" style={{ color: 'var(--text-secondary)' }}>
-                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
+                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
                 <span>Isolated Ledgers</span>
               </div>
               <div className="flex items-center gap-1.5" style={{ color: 'var(--text-secondary)' }}>
-                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
+                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
                 <span>Independent Sequences</span>
               </div>
               <div className="flex items-center gap-1.5" style={{ color: 'var(--text-secondary)' }}>
-                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
+                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
                 <span>Zero Data Leakage</span>
               </div>
             </div>
@@ -271,7 +355,7 @@ export function RegisterPage() {
                 type="submit"
                 loading={loading}
                 icon={ArrowRight}
-                className="w-full py-2.5 text-sm font-medium"
+                className="w-full py-2.5 text-sm font-semibold"
               >
                 {loading ? 'Provisioning Agency Workspace...' : 'Launch Agency Workspace'}
               </Button>
@@ -306,4 +390,5 @@ export function RegisterPage() {
     </div>
   );
 }
+
 export default RegisterPage;
