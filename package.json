@@ -9,6 +9,7 @@
     "frontend"
   ],
   "scripts": {
+    "dev": "npm run dev:frontend",
     "dev:backend": "npm --prefix backend run dev",
     "dev:frontend": "npm --prefix frontend run dev",
     "build:frontend": "npm --prefix frontend run build",
