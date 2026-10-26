@@ -63,9 +63,12 @@ export async function resolveClient(clientIdOrName, userId = null, session = nul
     if (agencyId) query.agency = agencyId;
     const existing = await Client.findOne(query).session(session);
     if (existing) return existing;
+    throw new Error('Specified client does not exist in this agency.');
   }
 
   const nameUpper = String(clientIdOrName).trim().toUpperCase();
+  if (!nameUpper) return null;
+
   const query = { name: nameUpper };
   if (agencyId) query.agency = agencyId;
 
@@ -203,15 +206,22 @@ export async function createTicketInvoice(data, userId, agencyId = null) {
     let totalBuy = 0;
     let totalSell = 0;
 
-    const formattedPassengers = passengers.map(p => {
+    const formattedPassengers = passengers.map((p, idx) => {
+      const name = String(p.name || '').trim().toUpperCase();
+      if (!name) {
+        throw new Error(`Passenger name is required for row ${idx + 1}.`);
+      }
       const cost = Number(p.cost) || 0;
       const sell = Number(p.sell) || 0;
+      if (cost < 0 || sell < 0) {
+        throw new Error(`Ticket cost and sell prices cannot be negative (Row ${idx + 1}: ${name}).`);
+      }
       const profit = sell - cost;
       totalBuy += cost;
       totalSell += sell;
 
       return {
-        name: String(p.name || '').trim().toUpperCase(),
+        name,
         ticketNo: p.ticketNo ? String(p.ticketNo).trim() : '',
         pnr: p.pnr ? String(p.pnr).trim().toUpperCase() : '',
         airline: p.airline || null,
@@ -300,15 +310,22 @@ export async function createVisaInvoice(data, userId, agencyId = null) {
     let totalBuy = 0;
     let totalSell = 0;
 
-    const formattedPassengers = passengers.map(p => {
+    const formattedPassengers = passengers.map((p, idx) => {
+      const name = String(p.name || '').trim().toUpperCase();
+      if (!name) {
+        throw new Error(`Visa passenger name is required for row ${idx + 1}.`);
+      }
       const cost = Number(p.cost) || 0;
       const sell = Number(p.sell) || 0;
+      if (cost < 0 || sell < 0) {
+        throw new Error(`Visa cost and sell prices cannot be negative (Row ${idx + 1}: ${name}).`);
+      }
       const profit = sell - cost;
       totalBuy += cost;
       totalSell += sell;
 
       return {
-        name: String(p.name || '').trim().toUpperCase(),
+        name,
         visaNo: p.visaNo ? String(p.visaNo).trim() : '',
         sector: p.sector || null,
         cost,
@@ -660,15 +677,22 @@ export async function editTransaction(id, newData, userId, agencyId = null) {
       let totalBuy = 0;
       let totalSell = 0;
 
-      const formattedPassengers = passengers.map(p => {
+      const formattedPassengers = passengers.map((p, idx) => {
+        const name = String(p.name || '').trim().toUpperCase();
+        if (!name) {
+          throw new Error(`Passenger name is required for row ${idx + 1}.`);
+        }
         const cost = Number(p.cost) || 0;
         const sell = Number(p.sell) || 0;
+        if (cost < 0 || sell < 0) {
+          throw new Error(`Cost and sell prices cannot be negative (Row ${idx + 1}: ${name}).`);
+        }
         const profit = sell - cost;
         totalBuy += cost;
         totalSell += sell;
 
         return {
-          name: String(p.name || '').trim().toUpperCase(),
+          name,
           ticketNo: p.ticketNo ? String(p.ticketNo).trim() : '',
           visaNo: p.visaNo ? String(p.visaNo).trim() : '',
           pnr: p.pnr ? String(p.pnr).trim().toUpperCase() : '',
@@ -720,9 +744,13 @@ export async function editTransaction(id, newData, userId, agencyId = null) {
       oldTx.remarks = newData.remarks !== undefined ? newData.remarks : oldTx.remarks;
       oldTx.bspRef = newData.bspRef !== undefined ? newData.bspRef : oldTx.bspRef;
     } else if (oldTx.type === 'EXPENSE') {
+      const numAmount = newData.amount !== undefined ? Number(newData.amount) : oldTx.amount;
+      if (isNaN(numAmount) || numAmount <= 0) {
+        throw new Error('Expense amount must be greater than zero.');
+      }
       oldTx.date = newData.date ? new Date(newData.date) : oldTx.date;
       oldTx.category = newData.categoryId || oldTx.category;
-      oldTx.amount = Number(newData.amount) || oldTx.amount;
+      oldTx.amount = numAmount;
       oldTx.remarks = newData.remarks !== undefined ? newData.remarks : oldTx.remarks;
       oldTx.paidFrom = newData.paidFrom || oldTx.paidFrom;
     }

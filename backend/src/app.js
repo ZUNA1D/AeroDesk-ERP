@@ -60,8 +60,13 @@ if (env.NODE_ENV !== 'test') {
   app.use(morgan('dev'));
 }
 
-// Serve uploaded files statically
-app.use('/uploads', express.static(path.resolve(env.UPLOAD_DIR)));
+// Serve uploaded files statically with security headers
+app.use('/uploads', express.static(path.resolve(env.UPLOAD_DIR), {
+  setHeaders: (res) => {
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+    res.setHeader('Content-Security-Policy', "default-src 'none'");
+  }
+}));
 
 // Health check
 app.get('/api/health', (req, res) => {

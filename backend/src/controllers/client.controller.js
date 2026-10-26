@@ -1,14 +1,15 @@
 import { Client } from '../models/Client.js';
 import { Transaction } from '../models/transaction/Transaction.js';
 import { writeAuditLog } from '../services/audit.service.js';
+import { escapeRegex } from '../utils/regex.js';
 
 export async function listClients(req, res, next) {
   try {
     const { search, page = 1, limit = 50, sort = 'name' } = req.query;
 
     const query = { agency: req.agencyId };
-    if (search) {
-      const searchRegex = new RegExp(search.trim(), 'i');
+    if (search && typeof search === 'string') {
+      const searchRegex = new RegExp(escapeRegex(search.trim()), 'i');
       query.$and = [
         {
           $or: [

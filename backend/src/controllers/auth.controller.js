@@ -148,11 +148,12 @@ export async function setupInitialAdmin(req, res, next) {
 export async function login(req, res, next) {
   try {
     const { email, password } = req.body;
-    if (!email || !password) {
-      return res.status(400).json({ message: 'Email and password are required.' });
+    if (!email || !password || typeof email !== 'string' || typeof password !== 'string') {
+      return res.status(400).json({ message: 'Valid email and password strings are required.' });
     }
 
-    const user = await User.findOne({ email: email.trim().toLowerCase() }).populate('agency');
+    const cleanEmail = email.trim().toLowerCase();
+    const user = await User.findOne({ email: cleanEmail }).populate('agency');
     if (!user) {
       return res.status(401).json({ message: 'Invalid email or password.' });
     }

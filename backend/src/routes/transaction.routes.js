@@ -17,10 +17,10 @@ import { requireAuth, requireRole, optionalAuth } from '../middleware/auth.js';
 
 const router = Router();
 
-// Printable receipt voucher view (resolves auth if present, or allows public voucher viewing)
-router.get('/:id/receipt-pdf', optionalAuth, handleGetReceiptPdf);
-
 router.use(requireAuth);
+
+// Printable receipt voucher view (strictly isolated per authenticated agency)
+router.get('/:id/receipt-pdf', handleGetReceiptPdf);
 
 router.get('/', listTransactions);
 router.get('/:id', getTransactionById);
@@ -33,7 +33,7 @@ router.post('/expense', requireRole('STAFF', 'MANAGER', 'ADMIN'), handleCreateEx
 router.post('/refund', requireRole('STAFF', 'MANAGER', 'ADMIN'), handleCreateRefund);
 
 router.patch('/:id', requireRole('STAFF', 'MANAGER', 'ADMIN'), handleEditTransaction);
-router.post('/:id/void', requireRole('STAFF', 'MANAGER', 'ADMIN'), handleVoidTransaction);
+router.post('/:id/void', requireRole('MANAGER', 'ADMIN'), handleVoidTransaction);
 router.delete('/:id', requireRole('ADMIN'), handleHardDeleteTransaction);
 
 export default router;

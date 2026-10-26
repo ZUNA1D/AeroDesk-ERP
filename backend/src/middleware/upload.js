@@ -22,7 +22,33 @@ const storage = multer.diskStorage({
   }
 });
 
+const ALLOWED_MIME_TYPES = new Set([
+  'image/jpeg',
+  'image/png',
+  'image/webp',
+  'application/pdf'
+]);
+
+const ALLOWED_EXTENSIONS = new Set([
+  '.jpg',
+  '.jpeg',
+  '.png',
+  '.webp',
+  '.pdf'
+]);
+
+function fileFilter(req, file, cb) {
+  const ext = path.extname(file.originalname).toLowerCase();
+  if (!ALLOWED_EXTENSIONS.has(ext) || !ALLOWED_MIME_TYPES.has(file.mimetype)) {
+    const err = new Error('Invalid file type. Only JPG, PNG, WEBP, and PDF documents are permitted.');
+    err.statusCode = 400;
+    return cb(err, false);
+  }
+  cb(null, true);
+}
+
 export const upload = multer({
   storage,
+  fileFilter,
   limits: { fileSize: 10 * 1024 * 1024 } // 10MB limit
 });

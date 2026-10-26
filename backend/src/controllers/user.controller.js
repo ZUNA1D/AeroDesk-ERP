@@ -85,7 +85,13 @@ export async function updateUser(req, res, next) {
       return res.status(404).json({ message: 'User not found in this agency.' });
     }
 
-    const before = user.toObject();
+    if (active === false && String(user._id) === String(req.user._id)) {
+      return res.status(400).json({ message: 'You cannot deactivate your own account.' });
+    }
+
+    if (role && role !== 'ADMIN' && String(user._id) === String(req.user._id)) {
+      return res.status(400).json({ message: 'You cannot remove your own administrator privileges.' });
+    }
 
     if (name) user.name = name.trim();
     if (email) user.email = email.trim().toLowerCase();

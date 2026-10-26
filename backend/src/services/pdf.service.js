@@ -2,6 +2,16 @@ import { Settings } from '../models/Settings.js';
 import { formatMoney } from '../utils/money.js';
 import { numberToWords } from '../utils/numberToWords.js';
 
+export function escapeHtml(str) {
+  if (str == null) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 async function getCompanySettings(agencyId = null) {
   let settings = null;
   if (agencyId) {
@@ -35,15 +45,15 @@ export async function renderMoneyReceiptHtml(receipt, client, agencyId = null) {
 
 
   const logoMarkup = settings.logoUrl
-    ? `<img src="${settings.logoUrl}" alt="Logo" style="max-height: 60px; max-width: 180px; object-fit: contain;" />`
-    : `<div style="font-size: 24px; font-weight: 800; color: #0f172a; letter-spacing: -0.5px;">${settings.companyName.toUpperCase()}</div>`;
+    ? `<img src="${escapeHtml(settings.logoUrl)}" alt="Logo" style="max-height: 60px; max-width: 180px; object-fit: contain;" />`
+    : `<div style="font-size: 24px; font-weight: 800; color: #0f172a; letter-spacing: -0.5px;">${escapeHtml(settings.companyName.toUpperCase())}</div>`;
 
   return `
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Money Receipt - ${receipt.ref}</title>
+  <title>Money Receipt - ${escapeHtml(receipt.ref)}</title>
   <style>
     @page { size: A4; margin: 15mm; }
     body {
@@ -167,13 +177,13 @@ export async function renderMoneyReceiptHtml(receipt, client, agencyId = null) {
       <tr>
         <td style="vertical-align: middle;">
           ${logoMarkup}
-          <div style="font-size: 12px; color: #64748b; margin-top: 4px;">${settings.tagline || ''}</div>
+          <div style="font-size: 12px; color: #64748b; margin-top: 4px;">${escapeHtml(settings.tagline || '')}</div>
         </td>
         <td class="company-details" style="vertical-align: middle;">
-          <div><strong>${settings.companyName}</strong></div>
-          <div>${settings.address || ''}</div>
-          <div>Phone: ${settings.phone || ''}</div>
-          <div>Email: ${settings.email || ''}</div>
+          <div><strong>${escapeHtml(settings.companyName)}</strong></div>
+          <div>${escapeHtml(settings.address || '')}</div>
+          <div>Phone: ${escapeHtml(settings.phone || '')}</div>
+          <div>Email: ${escapeHtml(settings.email || '')}</div>
         </td>
       </tr>
     </table>
@@ -185,33 +195,33 @@ export async function renderMoneyReceiptHtml(receipt, client, agencyId = null) {
     <table class="meta-grid">
       <tr>
         <td class="meta-label">Receipt No:</td>
-        <td class="meta-value" style="width: 35%;"><strong>${receipt.ref}</strong></td>
+        <td class="meta-value" style="width: 35%;"><strong>${escapeHtml(receipt.ref)}</strong></td>
         <td class="meta-label">Date:</td>
         <td class="meta-value">${new Date(receipt.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}</td>
       </tr>
       <tr>
         <td class="meta-label">Received From:</td>
-        <td class="meta-value" colspan="3"><strong>${(client?.name || receipt.clientName || 'VALUED CLIENT').toUpperCase()}</strong></td>
+        <td class="meta-value" colspan="3"><strong>${escapeHtml((client?.name || receipt.clientName || 'VALUED CLIENT').toUpperCase())}</strong></td>
       </tr>
       <tr>
         <td class="meta-label">Payment Mode:</td>
-        <td class="meta-value">${receipt.mode || 'CASH'} ${receipt.bankName ? `(${receipt.bankName})` : ''}</td>
+        <td class="meta-value">${escapeHtml(receipt.mode || 'CASH')} ${receipt.bankName ? `(${escapeHtml(receipt.bankName)})` : ''}</td>
         <td class="meta-label">Ref / Cheque:</td>
-        <td class="meta-value">${receipt.chequeNo || receipt.transactionId || 'N/A'}</td>
+        <td class="meta-value">${escapeHtml(receipt.chequeNo || receipt.transactionId || 'N/A')}</td>
       </tr>
       <tr>
         <td class="meta-label">Particulars:</td>
-        <td class="meta-value" colspan="3">${receipt.remarks || 'Payment on account'}</td>
+        <td class="meta-value" colspan="3">${escapeHtml(receipt.remarks || 'Payment on account')}</td>
       </tr>
     </table>
 
     <div class="amount-box">
       <div style="display: flex; justify-content: space-between; align-items: center;">
         <span style="font-size: 13px; font-weight: 700; color: #64748b; text-transform: uppercase;">Amount Received:</span>
-        <span class="amount-num">${settings.currency} ${formattedAmount}</span>
+        <span class="amount-num">${escapeHtml(settings.currency)} ${formattedAmount}</span>
       </div>
       <div class="amount-in-words">
-        <strong>In Words:</strong> ${words}
+        <strong>In Words:</strong> ${escapeHtml(words)}
       </div>
     </div>
 
@@ -248,14 +258,14 @@ export async function renderStatementHtml({ title, partyName, partyDetails, peri
   const settings = await getCompanySettings();
 
   const logoMarkup = settings.logoUrl
-    ? `<img src="${settings.logoUrl}" alt="Logo" style="max-height: 50px; object-fit: contain;" />`
-    : `<div style="font-size: 20px; font-weight: 800; color: #0f172a;">${settings.companyName.toUpperCase()}</div>`;
+    ? `<img src="${escapeHtml(settings.logoUrl)}" alt="Logo" style="max-height: 50px; object-fit: contain;" />`
+    : `<div style="font-size: 20px; font-weight: 800; color: #0f172a;">${escapeHtml(settings.companyName.toUpperCase())}</div>`;
 
   const rowsMarkup = rows.map(r => `
     <tr style="border-bottom: 1px solid #e2e8f0;">
       <td style="padding: 8px 10px; font-size: 12px;">${new Date(r.date).toLocaleDateString('en-GB')}</td>
-      <td style="padding: 8px 10px; font-size: 12px; font-weight: 600;">${r.ref}</td>
-      <td style="padding: 8px 10px; font-size: 12px;">${r.description || r.type}</td>
+      <td style="padding: 8px 10px; font-size: 12px; font-weight: 600;">${escapeHtml(r.ref)}</td>
+      <td style="padding: 8px 10px; font-size: 12px;">${escapeHtml(r.description || r.type)}</td>
       <td style="padding: 8px 10px; font-size: 12px; text-align: right; color: #0f172a;">${r.debit || r.cost ? formatMoney(r.debit || r.cost) : '-'}</td>
       <td style="padding: 8px 10px; font-size: 12px; text-align: right; color: #16a34a;">${r.credit || r.depositOrPayment ? formatMoney(r.credit || r.depositOrPayment) : '-'}</td>
       <td style="padding: 8px 10px; font-size: 12px; text-align: right; font-weight: 700;">${formatMoney(r.balance)}</td>
@@ -267,7 +277,7 @@ export async function renderStatementHtml({ title, partyName, partyDetails, peri
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>${title} - ${partyName}</title>
+  <title>${escapeHtml(title)} - ${escapeHtml(partyName)}</title>
   <style>
     @page { size: A4; margin: 15mm; }
     body {
@@ -314,11 +324,11 @@ export async function renderStatementHtml({ title, partyName, partyDetails, peri
       <tr>
         <td>
           ${logoMarkup}
-          <div style="font-size: 12px; color: #64748b;">${settings.address || ''} | Phone: ${settings.phone || ''}</div>
+          <div style="font-size: 12px; color: #64748b;">${escapeHtml(settings.address || '')} | Phone: ${escapeHtml(settings.phone || '')}</div>
         </td>
         <td style="text-align: right;">
-          <h2 style="margin: 0; font-size: 18px; text-transform: uppercase;">${title}</h2>
-          <div style="font-size: 12px; color: #64748b;">Period: ${period.from || 'All time'} to ${period.to || 'Present'}</div>
+          <h2 style="margin: 0; font-size: 18px; text-transform: uppercase;">${escapeHtml(title)}</h2>
+          <div style="font-size: 12px; color: #64748b;">Period: ${escapeHtml(period?.from || 'All time')} to ${escapeHtml(period?.to || 'Present')}</div>
         </td>
       </tr>
     </table>
@@ -326,13 +336,13 @@ export async function renderStatementHtml({ title, partyName, partyDetails, peri
     <table style="width: 100%; margin-bottom: 16px; font-size: 13px;">
       <tr>
         <td>
-          <strong>Statement For:</strong> <span style="font-size: 15px; font-weight: 700;">${partyName}</span><br />
-          <span style="color: #64748b;">${partyDetails || ''}</span>
+          <strong>Statement For:</strong> <span style="font-size: 15px; font-weight: 700;">${escapeHtml(partyName)}</span><br />
+          <span style="color: #64748b;">${escapeHtml(partyDetails || '')}</span>
         </td>
         <td style="text-align: right;">
-          <div>Opening Balance: <strong>${currency} ${formatMoney(openingBalance)}</strong></div>
+          <div>Opening Balance: <strong>${escapeHtml(currency)} ${formatMoney(openingBalance)}</strong></div>
           <div style="font-size: 16px; font-weight: 800; color: #0f172a; margin-top: 4px;">
-            Closing Balance: ${currency} ${formatMoney(closingBalance)}
+            Closing Balance: ${escapeHtml(currency)} ${formatMoney(closingBalance)}
           </div>
         </td>
       </tr>

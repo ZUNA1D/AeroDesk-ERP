@@ -37,3 +37,4 @@ backend/uploads/*
 01_ROADMAP.md
 02_TECHNICAL_SPEC.md
 docs/
+backend/tests/

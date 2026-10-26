@@ -14,6 +14,7 @@ import {
   hardDeleteTransaction
 } from '../services/transaction.service.js';
 import { renderMoneyReceiptHtml } from '../services/pdf.service.js';
+import { escapeRegex } from '../utils/regex.js';
 
 export async function listTransactions(req, res, next) {
   try {
@@ -62,8 +63,8 @@ export async function listTransactions(req, res, next) {
       }
     }
 
-    if (search) {
-      const searchRegex = new RegExp(search.trim(), 'i');
+    if (search && typeof search === 'string') {
+      const searchRegex = new RegExp(escapeRegex(search.trim()), 'i');
       query.$and = [
         {
           $or: [
@@ -238,7 +239,10 @@ export async function handleGetReceiptPdf(req, res, next) {
       query.ref = id;
     }
 
-    if (req.agencyId) {
+    if (req.user?.role !== 'SUPER_ADMIN') {
+      if (!req.agencyId) {
+        return res.status(403).json({ message: 'Agency context is required to view receipts.' });
+      }
       query.agency = req.agencyId;
     }
 
@@ -249,7 +253,7 @@ export async function handleGetReceiptPdf(req, res, next) {
 
     const agencyId = req.agencyId || receipt.agency;
     const html = await renderMoneyReceiptHtml(receipt, receipt.client, agencyId);
-    res.setHeader('Content-Type', 'text/html');
+    res.setHeader('Content-Type', 'text/html; charset=utf-8');
     res.send(html);
   } catch (err) {
     next(err);

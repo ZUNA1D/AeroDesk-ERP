@@ -7,7 +7,13 @@ export async function listSuppliers(req, res, next) {
     const { type, active } = req.query;
 
     const query = { agency: req.agencyId };
-    if (type) query.type = type.toUpperCase();
+    if (type) {
+      if (typeof type === 'string') {
+        query.type = type.toUpperCase();
+      } else if (Array.isArray(type)) {
+        query.type = { $in: type.map(t => String(t).toUpperCase()) };
+      }
+    }
     if (active !== undefined) query.active = active === 'true';
 
     const suppliers = await Supplier.find(query).sort({ isSelf: -1, type: 1, name: 1 });

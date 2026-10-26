@@ -65,6 +65,26 @@ export function VisaPage() {
     e.preventDefault();
     if (!clientId) { setErrorMessage('Please select or add a client.'); return; }
     if (!supplierId) { setErrorMessage('Please select a supplier.'); return; }
+
+    if (!passengers || passengers.length === 0) {
+      setErrorMessage('Please add at least one visa passenger row.');
+      return;
+    }
+
+    for (let i = 0; i < passengers.length; i++) {
+      const p = passengers[i];
+      if (!p.name || !p.name.trim()) {
+        setErrorMessage(`Please enter a passenger name for row ${i + 1}.`);
+        return;
+      }
+      const cost = Number(p.cost) || 0;
+      const sell = Number(p.sell) || 0;
+      if (cost < 0 || sell < 0) {
+        setErrorMessage(`Cost and sell prices cannot be negative (Row ${i + 1}: ${p.name.trim()}).`);
+        return;
+      }
+    }
+
     createVisaMutation.mutate({ date, clientId, supplierId, passengers, notes });
   };
 
