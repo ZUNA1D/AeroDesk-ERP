@@ -32,7 +32,7 @@ router.post('/supplier-txn', requireRole('STAFF', 'MANAGER', 'ADMIN'), handleCre
 router.post('/expense', requireRole('STAFF', 'MANAGER', 'ADMIN'), handleCreateExpense);
 router.post('/refund', requireRole('STAFF', 'MANAGER', 'ADMIN'), handleCreateRefund);
 
-router.patch('/:id', requireRole('STAFF', 'MANAGER', 'ADMIN'), handleEditTransaction);
+router.patch('/:id', requireRole('MANAGER', 'ADMIN'), handleEditTransaction);
 router.post('/:id/void', requireRole('MANAGER', 'ADMIN'), handleVoidTransaction);
 router.delete('/:id', requireRole('ADMIN'), handleHardDeleteTransaction);
 

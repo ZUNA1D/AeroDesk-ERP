@@ -223,9 +223,76 @@ This document defines the step-by-step, end-to-end plan to remediate all 14 vuln
 
 ---
 
+---
+
+## Phase 6: Second-Round Edge Cases & Accounting Security
+
+### Step 15: VULN-15 & VULN-16 - Safe Refund Validation & Over-Refund Prevention
+- **Target File:** [`backend/src/services/transaction.service.js`](file:///c:/Users/send2/Desktop/SAL%202.0/backend/src/services/transaction.service.js)
+- **Change:**
+  In `createRefund`:
+  1. Reject refund if `parent.status !== 'ACTIVE'`.
+  2. Reject refund if `parent.type !== 'TICKET_INVOICE' && parent.type !== 'VISA_INVOICE'`.
+  3. Validate amounts `clientRefundAmount >= 0`, `supplierRefundAmount >= 0`, and at least one `> 0`.
+  4. Query existing active refunds for `parentTransaction` and enforce cumulative refunds `<= parent.totalSell` (client) and `<= parent.totalBuy` (supplier).
+
+### Step 16: VULN-17 - Prevent Voiding Invoices with Active Refunds
+- **Target File:** [`backend/src/services/transaction.service.js`](file:///c:/Users/send2/Desktop/SAL%202.0/backend/src/services/transaction.service.js)
+- **Change:**
+  In `voidTransaction`:
+  Query active refunds linked to the invoice. If any active refunds exist, reject the void operation with 400 Bad Request to prevent double refunding / balance corruption.
+
+### Step 17: VULN-18 - Fix Profit Report Airline and Sector Filters
+- **Target File:** [`backend/src/services/report.service.js`](file:///c:/Users/send2/Desktop/SAL%202.0/backend/src/services/report.service.js)
+- **Change:**
+  1. Add `query['passengers.airline'] = airlineId` in `getTicketProfitReport`.
+  2. Add `query['passengers.sector'] = sectorId` in `getVisaProfitReport`.
+  3. Filter passenger arrays when summing costs, sells, and profit to ensure strictly scoped reporting.
+
+### Step 18: VULN-19 - Fast Reject Long Passwords to Prevent Bcrypt CPU Exhaustion
+- **Target Files:**
+  - [`backend/src/controllers/auth.controller.js`](file:///c:/Users/send2/Desktop/SAL%202.0/backend/src/controllers/auth.controller.js)
+  - [`backend/src/controllers/user.controller.js`](file:///c:/Users/send2/Desktop/SAL%202.0/backend/src/controllers/user.controller.js)
+- **Change:**
+  Add `if (password.length > 128) return res.status(400)` upfront on login, registration, and user update/creation.
+
+### Step 19: VULN-20 - Fix `ReferenceError: before is not defined` on User Update
+- **Target File:** [`backend/src/controllers/user.controller.js`](file:///c:/Users/send2/Desktop/SAL%202.0/backend/src/controllers/user.controller.js)
+- **Change:**
+  Declare `const before = user.toObject();` in `updateUser` before making modifications.
+
+### Step 20: VULN-21 - Verify Expense Category Tenant Isolation
+- **Target File:** [`backend/src/services/transaction.service.js`](file:///c:/Users/send2/Desktop/SAL%202.0/backend/src/services/transaction.service.js)
+- **Change:**
+  Validate `categoryId` against `ExpenseCategory` with tenant filter (`agency: req.agencyId`).
+
+### Step 21: VULN-22 - Block Transactions on In-House Stock Suppliers
+- **Target File:** [`backend/src/services/transaction.service.js`](file:///c:/Users/send2/Desktop/SAL%202.0/backend/src/services/transaction.service.js)
+- **Change:**
+  In `createSupplierTxn`, throw error if `supplier.isSelf || supplier.type === 'DIRECT'`.
+
+### Step 22: VULN-23 - Restrict Transaction Modification Permissions
+- **Target File:** [`backend/src/routes/transaction.routes.js`](file:///c:/Users/send2/Desktop/SAL%202.0/backend/src/routes/transaction.routes.js)
+- **Change:**
+  Change `PATCH /api/transactions/:id` permission guard from `requireRole('STAFF', 'MANAGER', 'ADMIN')` to `requireRole('MANAGER', 'ADMIN')`.
+
+### Step 23: VULN-24 & VULN-25 - Pagination Limits and Multi-Type Queries
+- **Target Files:**
+  - [`backend/src/controllers/transaction.controller.js`](file:///c:/Users/send2/Desktop/SAL%202.0/backend/src/controllers/transaction.controller.js)
+  - [`backend/src/controllers/client.controller.js`](file:///c:/Users/send2/Desktop/SAL%202.0/backend/src/controllers/client.controller.js)
+  - [`backend/src/controllers/audit.controller.js`](file:///c:/Users/send2/Desktop/SAL%202.0/backend/src/controllers/audit.controller.js)
+  - [`backend/src/routes/auth.routes.js`](file:///c:/Users/send2/Desktop/SAL%202.0/backend/src/routes/auth.routes.js)
+- **Change:**
+  1. Enforce `limitNum = Math.min(100, Math.max(1, limit))`.
+  2. Support array query parameters for `type`.
+  3. Apply `registerLimiter` rate limiting to `POST /api/auth/register`.
+
+---
+
 ## Execution Tracker
-- Phase 1: Security & Access Control
-- Phase 2: Financial Integrity & Ledger Safety
-- Phase 3: Multi-Tenancy & Query Robustness
-- Phase 4: Business Logic & UI Validation
-- Phase 5: Verification & Regression Testing
+- [x] Phase 1: Security & Access Control (VULN-01, VULN-02, VULN-04, VULN-12, VULN-13) - **PASSED**
+- [x] Phase 2: Financial Integrity & Ledger Safety (VULN-03, VULN-08, VULN-09) - **PASSED**
+- [x] Phase 3: Multi-Tenancy & Query Robustness (VULN-05, VULN-06, VULN-10, VULN-11) - **PASSED**
+- [x] Phase 4: Business Logic & UI Validation (VULN-07, VULN-14) - **PASSED**
+- [x] Phase 5: Verification & Regression Testing (`remediation_verification.mjs` 14/14 passed) - **PASSED**
+- [x] Phase 6: Second-Round Testing & Edge Cases (VULN-15 through VULN-25, 11/11 passed) - **PASSED**

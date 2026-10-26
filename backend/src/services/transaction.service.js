@@ -6,6 +6,7 @@ import { ClientReceipt } from '../models/transaction/ClientReceipt.js';
 import { SupplierDeposit, SupplierPayment, SupplierDebitMemo, SupplierCreditMemo } from '../models/transaction/SupplierTxn.js';
 import { Refund, Reissue } from '../models/transaction/RefundReissue.js';
 import { Expense } from '../models/transaction/Expense.js';
+import { ExpenseCategory } from '../models/ExpenseCategory.js';
 import { Client } from '../models/Client.js';
 import { Supplier } from '../models/Supplier.js';
 import { getNextRef } from './counter.service.js';
@@ -489,6 +490,9 @@ export async function createSupplierTxn(data, userId, agencyId = null) {
     if (!supplier) {
       throw new Error('Supplier is required.');
     }
+    if (supplier.isSelf || supplier.type === 'DIRECT') {
+      throw new Error('Cannot create payments, deposits, or adjustments for DIRECT / in-house stock suppliers.');
+    }
 
     let finalType = type;
     if (!finalType) {
@@ -560,6 +564,15 @@ export async function createExpense(data, userId, agencyId = null) {
       throw new Error('Expense amount must be greater than zero.');
     }
 
+    if (categoryId) {
+      const catQuery = { _id: categoryId };
+      if (agency) catQuery.agency = agency;
+      const cat = await ExpenseCategory.findOne(catQuery).session(session);
+      if (!cat) {
+        throw new Error('Expense category not found.');
+      }
+    }
+
     const ref = await getNextRef('EXP', session, agency);
 
     const doc = {
@@ -606,6 +619,38 @@ export async function createRefund(data, userId, agencyId = null) {
     if (!parent) {
       throw new Error('Parent transaction not found.');
     }
+    if (parent.status !== 'ACTIVE') {
+      throw new Error('Cannot refund a voided or inactive transaction.');
+    }
+    if (parent.type !== 'TICKET_INVOICE' && parent.type !== 'VISA_INVOICE') {
+      throw new Error('Refunds can only be issued against active Ticket or Visa invoices.');
+    }
+
+    const clientAmt = Number(clientRefundAmount) || 0;
+    const suppAmt = Number(supplierRefundAmount) || 0;
+    const svcCharge = Number(serviceCharge) || 0;
+
+    if (clientAmt < 0 || suppAmt < 0 || svcCharge < 0) {
+      throw new Error('Refund amounts and service charges cannot be negative numbers.');
+    }
+    if (clientAmt === 0 && suppAmt === 0) {
+      throw new Error('At least one refund amount (client or supplier) must be greater than zero.');
+    }
+
+    // Cumulative refund bounds check against parent invoice totals
+    const parentSell = Number(parent.totalSell) || 0;
+    const parentBuy = Number(parent.totalBuy) || 0;
+
+    const activeRefunds = await Refund.find({ parentTransaction: parent._id, status: 'ACTIVE' }).session(session);
+    const totalAlreadyClientRefunded = activeRefunds.reduce((sum, r) => sum + (Number(r.clientRefundAmount) || 0), 0);
+    const totalAlreadySupplierRefunded = activeRefunds.reduce((sum, r) => sum + (Number(r.supplierRefundAmount) || 0), 0);
+
+    if (totalAlreadyClientRefunded + clientAmt > parentSell) {
+      throw new Error(`Total client refunds (${totalAlreadyClientRefunded + clientAmt} BDT) cannot exceed parent invoice total sell (${parentSell} BDT).`);
+    }
+    if (totalAlreadySupplierRefunded + suppAmt > parentBuy) {
+      throw new Error(`Total supplier refunds (${totalAlreadySupplierRefunded + suppAmt} BDT) cannot exceed parent invoice total cost (${parentBuy} BDT).`);
+    }
 
     const agency = agencyId || data.agencyId || data.agency || parent.agency;
 
@@ -618,10 +663,10 @@ export async function createRefund(data, userId, agencyId = null) {
       parentTransaction: parent._id,
       client: parent.client,
       supplier: parent.supplier,
-      amount: Number(clientRefundAmount) || 0,
-      clientRefundAmount: Number(clientRefundAmount) || 0,
-      supplierRefundAmount: Number(supplierRefundAmount) || 0,
-      serviceCharge: Number(serviceCharge) || 0,
+      amount: clientAmt,
+      clientRefundAmount: clientAmt,
+      supplierRefundAmount: suppAmt,
+      serviceCharge: svcCharge,
       reason,
       branch,
       createdBy: userId
@@ -748,6 +793,14 @@ export async function editTransaction(id, newData, userId, agencyId = null) {
       if (isNaN(numAmount) || numAmount <= 0) {
         throw new Error('Expense amount must be greater than zero.');
       }
+      if (newData.categoryId) {
+        const catQuery = { _id: newData.categoryId };
+        if (oldTx.agency) catQuery.agency = oldTx.agency;
+        const cat = await ExpenseCategory.findOne(catQuery).session(session);
+        if (!cat) {
+          throw new Error('Expense category not found.');
+        }
+      }
       oldTx.date = newData.date ? new Date(newData.date) : oldTx.date;
       oldTx.category = newData.categoryId || oldTx.category;
       oldTx.amount = numAmount;
@@ -794,6 +847,14 @@ export async function voidTransaction(id, reason, userId, agencyId = null) {
     }
     if (tx.status === 'VOIDED') {
       throw new Error('Transaction is already voided.');
+    }
+
+    // Check if this transaction is an invoice that has active refunds attached
+    if (tx.type === 'TICKET_INVOICE' || tx.type === 'VISA_INVOICE') {
+      const activeRefunds = await Refund.find({ parentTransaction: tx._id, status: 'ACTIVE' }).session(session);
+      if (activeRefunds.length > 0) {
+        throw new Error(`Cannot void invoice ${tx.ref} because it has ${activeRefunds.length} active refund(s) attached. Please void associated refunds first.`);
+      }
     }
 
     const beforeState = tx.toObject();

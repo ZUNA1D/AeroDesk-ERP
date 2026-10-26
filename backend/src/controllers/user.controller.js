@@ -21,6 +21,9 @@ export async function createUser(req, res, next) {
     if (!name || !email || !password) {
       return res.status(400).json({ message: 'Name, email, and password are required.' });
     }
+    if (typeof password !== 'string' || password.length > 128) {
+      return res.status(400).json({ message: 'Password must not exceed 128 characters.' });
+    }
 
     // Check agency user limits
     const [agency, currentCount] = await Promise.all([
@@ -85,12 +88,18 @@ export async function updateUser(req, res, next) {
       return res.status(404).json({ message: 'User not found in this agency.' });
     }
 
+    const before = user.toObject();
+
     if (active === false && String(user._id) === String(req.user._id)) {
       return res.status(400).json({ message: 'You cannot deactivate your own account.' });
     }
 
     if (role && role !== 'ADMIN' && String(user._id) === String(req.user._id)) {
       return res.status(400).json({ message: 'You cannot remove your own administrator privileges.' });
+    }
+
+    if (password && (typeof password !== 'string' || password.length > 128)) {
+      return res.status(400).json({ message: 'Password must not exceed 128 characters.' });
     }
 
     if (name) user.name = name.trim();

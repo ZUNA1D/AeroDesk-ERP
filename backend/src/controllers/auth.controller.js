@@ -62,6 +62,9 @@ export async function registerAgency(req, res, next) {
     if (!name || !email || !password) {
       return res.status(400).json({ message: 'Administrator name, email, and password are required.' });
     }
+    if (typeof password !== 'string' || password.length > 128) {
+      return res.status(400).json({ message: 'Password must not exceed 128 characters.' });
+    }
 
     const { agency, adminUser } = await provisionAgency({
       name: agencyName,
@@ -111,6 +114,9 @@ export async function setupInitialAdmin(req, res, next) {
     if (!name || !email || !password) {
       return res.status(400).json({ message: 'Name, email, and password are required.' });
     }
+    if (typeof password !== 'string' || password.length > 128) {
+      return res.status(400).json({ message: 'Password must not exceed 128 characters.' });
+    }
 
     const { agency, adminUser } = await provisionAgency({
       name: companyName?.trim() || 'AeroDesk Agency',
@@ -150,6 +156,9 @@ export async function login(req, res, next) {
     const { email, password } = req.body;
     if (!email || !password || typeof email !== 'string' || typeof password !== 'string') {
       return res.status(400).json({ message: 'Valid email and password strings are required.' });
+    }
+    if (password.length > 128) {
+      return res.status(400).json({ message: 'Password must not exceed 128 characters.' });
     }
 
     const cleanEmail = email.trim().toLowerCase();

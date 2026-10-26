@@ -268,19 +268,119 @@ During this aggressive "Break the Website" assessment, we systematically attacke
 
 ---
 
-## 4. Next Steps & Recommended Remediation Roadmap
+## 4. Initial Remediation Summary
+All 14 initial vulnerabilities were successfully patched, verified with unit test suites, and committed in commit `7845994`.
 
-1. **Immediate P0 Fixes (Branch `qa/break-test-audit`):**
-   - Add regex character escaping (`escapeRegex`) to client, transaction, and supplier search queries.
-   - Enforce positive amount checks on invoices and expenses in `transaction.service.js`.
-   - Restrict printable receipt voucher access to authenticated tenant users or cryptographically signed URLs.
-   - HTML-escape all dynamic data interpolated into printable vouchers in `pdf.service.js`.
-2. **P1 Fixes:**
-   - Add file extension and MIME type whitelist in `upload.js`.
-   - Prevent admin self-deactivation in `user.controller.js`.
-   - Restrict void operations to `MANAGER` and `ADMIN`.
-   - Add Mongoose CastError handling in `errorHandler.js`.
-3. **P2 Fixes:**
-   - Add `express-rate-limit` to `/api/auth/login`.
-   - Remove query parameter token acceptance from `auth.js`.
-   - Enhance frontend form validation in `InvoicePage.jsx` and `VisaPage.jsx`.
+---
+
+## 5. Second-Round Testing: Newly Discovered Vulnerabilities & Edge Cases
+
+Following the remediation of the initial 14 items, a second round of exploratory fuzzing, boundary probing, and permission auditing was conducted. 11 additional vulnerabilities and edge cases were discovered and resolved:
+
+### VULN-15: Refunding a Voided Invoice Causes Double Financial Reversal
+- **Severity:** `CRITICAL`
+- **Location:** [`backend/src/services/transaction.service.js:600-635`](file:///c:/Users/send2/Desktop/SAL%202.0/backend/src/services/transaction.service.js#L600-L635)
+- **Description:**  
+  When an invoice was voided, its financial effect was fully reversed (`applyEffect(oldTx, -1)`). However, `createRefund` did not verify the parent invoice's status (`ACTIVE` vs `VOIDED`). Issuing a refund on a voided invoice resulted in double deduction of client due and double crediting of supplier wallets.
+- **Remediation:**  
+  Assert `if (parent.status !== 'ACTIVE') throw new Error('Cannot refund a voided or inactive transaction.');`
+
+---
+
+### VULN-16: Uncapped, Negative, or Excessive Refund Amounts
+- **Severity:** `CRITICAL`
+- **Location:** [`backend/src/services/transaction.service.js:615-645`](file:///c:/Users/send2/Desktop/SAL%202.0/backend/src/services/transaction.service.js#L615-L645)
+- **Description:**  
+  Refund requests accepted negative numbers (which increased customer debt) or amounts exceeding the parent invoice price. Multiple partial refunds could also cumulatively exceed the invoice total sell price.
+- **Remediation:**  
+  Enforced non-negative amount checks and checked active cumulative refunds against `parent.totalSell` and `parent.totalBuy`.
+
+---
+
+### VULN-17: Voiding an Invoice with Active Refunds Attached
+- **Severity:** `HIGH`
+- **Location:** [`backend/src/services/transaction.service.js:845-865`](file:///c:/Users/send2/Desktop/SAL%202.0/backend/src/services/transaction.service.js#L845-L865)
+- **Description:**  
+  If a customer was granted a partial refund, voiding the parent invoice would reverse the full invoice total without accounting for the active refund, resulting in client balance corruption.
+- **Remediation:**  
+  Blocked voiding of parent invoices if active linked refunds exist: `Cannot void invoice ... because it has active refund(s) attached. Please void associated refunds first.`
+
+---
+
+### VULN-18: Profit Reports Silently Ignored `airlineId` and `sectorId` Filters
+- **Severity:** `MEDIUM`
+- **Location:** [`backend/src/services/report.service.js:235-370`](file:///c:/Users/send2/Desktop/SAL%202.0/backend/src/services/report.service.js#L235-L370)
+- **Description:**  
+  `getTicketProfitReport` and `getVisaProfitReport` accepted `airlineId` and `sectorId` query parameters, but never added them to the Mongoose query. Filtering by airline or sector returned all invoices across all airlines/sectors.
+- **Remediation:**  
+  Added `query['passengers.airline'] = airlineId` and `query['passengers.sector'] = sectorId`, and filtered passenger rows to compute accurate profit and passenger metrics.
+
+---
+
+### VULN-19: Bcrypt CPU Starvation via Giant Password Payloads (>128 chars)
+- **Severity:** `MEDIUM`
+- **Location:** [`backend/src/controllers/auth.controller.js`](file:///c:/Users/send2/Desktop/SAL%202.0/backend/src/controllers/auth.controller.js) and [`user.controller.js`](file:///c:/Users/send2/Desktop/SAL%202.0/backend/src/controllers/user.controller.js)
+- **Description:**  
+  Submitting excessively long passwords (5,000+ characters) caused Node.js threadpool exhaustion during Bcrypt hashing/comparison.
+- **Remediation:**  
+  Fast-rejected passwords exceeding 128 characters with HTTP 400 Bad Request before calling bcrypt functions.
+
+---
+
+### VULN-20: Uncaught `ReferenceError: before is not defined` in `updateUser`
+- **Severity:** `HIGH`
+- **Location:** [`backend/src/controllers/user.controller.js:114`](file:///c:/Users/send2/Desktop/SAL%202.0/backend/src/controllers/user.controller.js#L114)
+- **Description:**  
+  `writeAuditLog` referenced `before`, but `const before = user.toObject()` was never declared, crashing `PATCH /api/users/:id` with HTTP 500.
+- **Remediation:**  
+  Captured `const before = user.toObject();` immediately after fetching the user.
+
+---
+
+### VULN-21: Expense Creation with Unverified / Foreign `categoryId`
+- **Severity:** `MEDIUM`
+- **Location:** [`backend/src/services/transaction.service.js:560-575`](file:///c:/Users/send2/Desktop/SAL%202.0/backend/src/services/transaction.service.js#L560-L575)
+- **Description:**  
+  `createExpense` accepted arbitrary `categoryId` values without verifying their existence or tenant ownership.
+- **Remediation:**  
+  Validated `categoryId` against `ExpenseCategory` with tenant isolation check (`agency: req.agencyId`).
+
+---
+
+### VULN-22: Supplier Deposits / Payments on DIRECT In-House Suppliers
+- **Severity:** `MEDIUM`
+- **Location:** [`backend/src/services/transaction.service.js:485-500`](file:///c:/Users/send2/Desktop/SAL%202.0/backend/src/services/transaction.service.js#L485-L500)
+- **Description:**  
+  Creating supplier payments or deposits for suppliers flagged as `isSelf: true` or `type: 'DIRECT'` created orphan transactions without balance adjustments.
+- **Remediation:**  
+  Rejected supplier transactions on direct in-house suppliers with 400 Bad Request.
+
+---
+
+### VULN-23: Unauthorized Financial Transaction Modification by `STAFF` Role
+- **Severity:** `HIGH`
+- **Location:** [`backend/src/routes/transaction.routes.js:35`](file:///c:/Users/send2/Desktop/SAL%202.0/backend/src/routes/transaction.routes.js#L35)
+- **Description:**  
+  `PATCH /api/transactions/:id` allowed `STAFF` members to modify already-posted financial transactions.
+- **Remediation:**  
+  Restricted editing to `requireRole('MANAGER', 'ADMIN')`.
+
+---
+
+### VULN-24: Uncapped Pagination Limits (`?limit=1000000`)
+- **Severity:** `LOW`
+- **Location:** [`transaction.controller.js`](file:///c:/Users/send2/Desktop/SAL%202.0/backend/src/controllers/transaction.controller.js), [`client.controller.js`](file:///c:/Users/send2/Desktop/SAL%202.0/backend/src/controllers/client.controller.js), [`audit.controller.js`](file:///c:/Users/send2/Desktop/SAL%202.0/backend/src/controllers/audit.controller.js)
+- **Description:**  
+  Passing unbounded `limit` values loaded entire collections into memory, threatening Node.js heap exhaustion.
+- **Remediation:**  
+  Enforced `Math.min(100, Math.max(1, limit))`.
+
+---
+
+### VULN-25: Multi-Type Query Parameter Array Support
+- **Severity:** `LOW`
+- **Location:** [`backend/src/controllers/transaction.controller.js:40-46`](file:///c:/Users/send2/Desktop/SAL%202.0/backend/src/controllers/transaction.controller.js#L40-L46)
+- **Description:**  
+  `listTransactions` expected comma-delimited strings for `type` and failed when passed arrays like `?type[]=TICKET_INVOICE&type[]=VISA_INVOICE`.
+- **Remediation:**  
+  Added support for both array and comma-separated string inputs.

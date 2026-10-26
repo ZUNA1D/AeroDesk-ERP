@@ -28,6 +28,11 @@ export function errorHandler(err, req, res, next) {
     message.includes('greater than zero') ||
     message.includes('is required') ||
     message.includes('at least one') ||
+    message.includes('cannot exceed') ||
+    message.includes('Cannot refund') ||
+    message.includes('Cannot void') ||
+    message.includes('Cannot create') ||
+    message.includes('active refund') ||
     message.includes('Invalid file type')
   ) {
     statusCode = 400;

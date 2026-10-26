@@ -249,6 +249,7 @@ export async function getTicketProfitReport({ from, to, airlineId, clientId, sup
     }
   }
 
+  if (airlineId) query['passengers.airline'] = airlineId;
   if (clientId) query.client = clientId;
   if (supplierId) query.supplier = supplierId;
 
@@ -266,10 +267,18 @@ export async function getTicketProfitReport({ from, to, airlineId, clientId, sup
   const rows = [];
 
   for (const inv of invoices) {
-    totalBuy += Number(inv.totalBuy) || 0;
-    totalSell += Number(inv.totalSell) || 0;
-    totalProfit += Number(inv.profit) || 0;
-    totalPax += inv.passengers ? inv.passengers.length : 0;
+    const matchingPax = airlineId
+      ? (inv.passengers || []).filter(p => p.airline && (p.airline._id || p.airline).toString() === airlineId.toString())
+      : (inv.passengers || []);
+
+    const rowBuy = matchingPax.reduce((s, p) => s + (Number(p.cost) || 0), 0);
+    const rowSell = matchingPax.reduce((s, p) => s + (Number(p.sell) || 0), 0);
+    const rowProfit = rowSell - rowBuy;
+
+    totalBuy += rowBuy;
+    totalSell += rowSell;
+    totalProfit += rowProfit;
+    totalPax += matchingPax.length;
 
     rows.push({
       _id: inv._id,
@@ -277,11 +286,11 @@ export async function getTicketProfitReport({ from, to, airlineId, clientId, sup
       date: inv.date,
       clientName: inv.client?.name || 'N/A',
       supplierName: inv.supplier?.name || 'N/A',
-      paxCount: inv.passengers ? inv.passengers.length : 0,
-      passengers: inv.passengers || [],
-      totalBuy: inv.totalBuy,
-      totalSell: inv.totalSell,
-      profit: inv.profit
+      paxCount: matchingPax.length,
+      passengers: matchingPax,
+      totalBuy: Math.round(rowBuy * 100) / 100,
+      totalSell: Math.round(rowSell * 100) / 100,
+      profit: Math.round(rowProfit * 100) / 100
     });
   }
 
@@ -319,6 +328,7 @@ export async function getVisaProfitReport({ from, to, sectorId, clientId, suppli
     }
   }
 
+  if (sectorId) query['passengers.sector'] = sectorId;
   if (clientId) query.client = clientId;
   if (supplierId) query.supplier = supplierId;
 
@@ -336,10 +346,18 @@ export async function getVisaProfitReport({ from, to, sectorId, clientId, suppli
   const rows = [];
 
   for (const inv of invoices) {
-    totalBuy += Number(inv.totalBuy) || 0;
-    totalSell += Number(inv.totalSell) || 0;
-    totalProfit += Number(inv.profit) || 0;
-    totalPax += inv.passengers ? inv.passengers.length : 0;
+    const matchingPax = sectorId
+      ? (inv.passengers || []).filter(p => p.sector && (p.sector._id || p.sector).toString() === sectorId.toString())
+      : (inv.passengers || []);
+
+    const rowBuy = matchingPax.reduce((s, p) => s + (Number(p.cost) || 0), 0);
+    const rowSell = matchingPax.reduce((s, p) => s + (Number(p.sell) || 0), 0);
+    const rowProfit = rowSell - rowBuy;
+
+    totalBuy += rowBuy;
+    totalSell += rowSell;
+    totalProfit += rowProfit;
+    totalPax += matchingPax.length;
 
     rows.push({
       _id: inv._id,
@@ -347,11 +365,11 @@ export async function getVisaProfitReport({ from, to, sectorId, clientId, suppli
       date: inv.date,
       clientName: inv.client?.name || 'N/A',
       supplierName: inv.supplier?.name || 'N/A',
-      paxCount: inv.passengers ? inv.passengers.length : 0,
-      passengers: inv.passengers || [],
-      totalBuy: inv.totalBuy,
-      totalSell: inv.totalSell,
-      profit: inv.profit
+      paxCount: matchingPax.length,
+      passengers: matchingPax,
+      totalBuy: Math.round(rowBuy * 100) / 100,
+      totalSell: Math.round(rowSell * 100) / 100,
+      profit: Math.round(rowProfit * 100) / 100
     });
   }
 

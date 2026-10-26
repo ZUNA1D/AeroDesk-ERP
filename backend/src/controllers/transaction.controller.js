@@ -38,10 +38,14 @@ export async function listTransactions(req, res, next) {
     }
 
     if (type) {
-      if (type.includes(',')) {
-        query.type = { $in: type.split(',') };
-      } else {
-        query.type = type;
+      if (Array.isArray(type)) {
+        query.type = { $in: type };
+      } else if (typeof type === 'string') {
+        if (type.includes(',')) {
+          query.type = { $in: type.split(',') };
+        } else {
+          query.type = type;
+        }
       }
     }
 
@@ -80,8 +84,8 @@ export async function listTransactions(req, res, next) {
       ];
     }
 
-    const pageNum = parseInt(page, 10);
-    const limitNum = parseInt(limit, 10);
+    const pageNum = Math.max(1, parseInt(page, 10) || 1);
+    const limitNum = Math.min(100, Math.max(1, parseInt(limit, 10) || 50));
     const skip = (pageNum - 1) * limitNum;
 
     // Sorting

@@ -11,9 +11,15 @@ const loginLimiter = rateLimiter({
   message: 'Too many login attempts. Please try again after 15 minutes.'
 });
 
+const registerLimiter = rateLimiter({
+  windowMs: 60 * 60 * 1000,
+  max: 10,
+  message: 'Too many registration attempts from this IP. Please try again after an hour.'
+});
+
 router.get('/status', getSetupStatus);
 router.post('/setup', setupInitialAdmin);
-router.post('/register', registerAgency);
+router.post('/register', registerLimiter, registerAgency);
 router.post('/login', loginLimiter, login);
 router.post('/logout', logout);
 router.get('/me', requireAuth, getMe);
